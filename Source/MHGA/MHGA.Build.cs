@@ -25,12 +25,8 @@ public class MHGA : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"MHGA",
-			"MHGA/Variant_Horror",
-			"MHGA/Variant_Horror/UI",
-			"MHGA/Variant_Shooter",
-			"MHGA/Variant_Shooter/AI",
-			"MHGA/Variant_Shooter/UI",
-			"MHGA/Variant_Shooter/Weapons"
+			"MHGA/public",
+			"MHGA/Private"
 		});
 
 		// Uncomment if you are using Slate UI
