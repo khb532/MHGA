@@ -7,16 +7,28 @@ UENUM(BlueprintType)
 enum class EIngredient : uint8
 {
 	BottomBread		UMETA(DisplayName = "BottomBread"),
+	MiddleBread		UMETA(DisplayName = "MiddleBread"),
+	TopBread		UMETA(DisplayName = "TopBread"),
 	Patty			UMETA(DisplayName = "Patty"),
-	TopBread		UMETA(DisplayName = "TopBread")
+	Lettuce			UMETA(DisplayName = "Lettuce"),
+	Tomato			UMETA(DisplayName = "Tomato"),
+	Onion			UMETA(DisplayName = "Onion"),
+	Bacon			UMETA(DisplayName = "Bacon"),
+	Cheese			UMETA(DisplayName = "Cheese"),
+	Pickle			UMETA(DisplayName = "Pickle"),
+	Sauce			UMETA(DisplayName = "Sauce"),
+	ShanghaiPortion	UMETA(DisplayName = "ShanghaiPotion"),
+	ShrimpPortion	UMETA(DisplayName = "ShrimpPotion"),
 };
 
 UENUM(BlueprintType)
 enum class EBurgerMenu : uint8
 {
-	Bigmac				UMETA(DisplayName = "Bigmac"),
-	Boolgogi			UMETA(DisplayName = "Boolgogi"),
-	Cheeseburger		UMETA(DisplayName = "Cheeseburger")
+	BigMac				UMETA(DisplayName = "BigMac"),
+	BTD					UMETA(DisplayName = "BTD"),
+	QPC					UMETA(DisplayName = "QPC"),
+	Shanghai			UMETA(DisplayName = "Shanghai"),
+	Shrimp				UMETA(DisplayName = "Shrimp")
 };
 
 USTRUCT(BlueprintType)
@@ -26,7 +38,7 @@ struct FBurgerRecipe : public FTableRowBase
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EBurgerMenu BurgerName;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<EIngredient> Ingredients;
+	TMap<EIngredient, int32> IngredientsMap;
 };
