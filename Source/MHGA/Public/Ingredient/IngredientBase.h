@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BurgerData.h"
 #include "GrabableProps.h"
 #include "GameFramework/Actor.h"
 #include "IngredientBase.generated.h"
@@ -25,8 +26,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Ingredients")
 	UStaticMeshComponent* Mesh;
 
-	//UPROPERTY(EditAnywhere, Category = "Ingredients")
-	//EIngredient IngType = EIngredient::;
+	UPROPERTY(EditAnywhere, Category = "Ingredients")
+	EIngredient IngType = EIngredient::None;
 	
 public:
 	virtual void OnGrabbed() override;

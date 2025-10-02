@@ -11,6 +11,7 @@ AIngredientBase::AIngredientBase()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
 	Mesh->SetSimulatePhysics(true);
+	Mesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 }
 
 void AIngredientBase::BeginPlay()

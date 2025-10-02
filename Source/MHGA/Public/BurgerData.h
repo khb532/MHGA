@@ -6,6 +6,7 @@
 UENUM(BlueprintType)
 enum class EIngredient : uint8
 {
+	None			UMETA(DisplayName = "None"),
 	BottomBread		UMETA(DisplayName = "BottomBread"),
 	MiddleBread		UMETA(DisplayName = "MiddleBread"),
 	TopBread		UMETA(DisplayName = "TopBread"),
@@ -24,6 +25,7 @@ enum class EIngredient : uint8
 UENUM(BlueprintType)
 enum class EBurgerMenu : uint8
 {
+	None				UMETA(DisplayName = "None"),
 	BigMac				UMETA(DisplayName = "BigMac"),
 	BTD					UMETA(DisplayName = "BTD"),
 	QPC					UMETA(DisplayName = "QPC"),
