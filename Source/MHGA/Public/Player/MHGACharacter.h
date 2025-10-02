@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "MHGACharacter.generated.h"
 
+class UInteractComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -22,16 +23,16 @@ UCLASS(abstract)
 class AMHGACharacter : public ACharacter
 {
 	GENERATED_BODY()
+
+public:
+	AMHGACharacter();
 	
 protected:
+	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* FirstPersonMesh;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FirstPersonCameraComponent;
-
+	//inputs
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* IA_Move;
 	UPROPERTY(EditAnywhere, Category ="Input")
@@ -41,8 +42,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* IA_Use;
 	
-public:
-	AMHGACharacter();
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	USkeletalMeshComponent* FirstPersonMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	UCameraComponent* FirstPersonCameraComponent;
+
+	//comps
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	UInteractComponent* InteractComponent;
+	
+
+
 
 protected:
 	void MoveInput(const FInputActionValue& Value);
@@ -50,10 +60,6 @@ protected:
 	void PickInput(const FInputActionValue& Value);
 	void UseInput(const FInputActionValue& Value);
 
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
-	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
 
 public:
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }

@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "MHGA.h"
+#include "Player/InteractComponent.h"
 
 AMHGACharacter::AMHGACharacter()
 {
@@ -34,6 +35,9 @@ AMHGACharacter::AMHGACharacter()
 
 	GetCapsuleComponent()->SetCapsuleSize(34.0f, 96.0f);
 
+	//comps
+	InteractComponent = CreateDefaultSubobject<UInteractComponent>(TEXT("InteractComponent"));
+	
 
 	//////////////////////////////////Input///////////////////////////////
 	ConstructorHelpers::FObjectFinder<UInputAction> move(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Move.IA_Move'"));
@@ -50,6 +54,11 @@ AMHGACharacter::AMHGACharacter()
 		IA_Use = use.Object;
 }
 
+void AMHGACharacter::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
@@ -64,39 +73,29 @@ void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 void AMHGACharacter::MoveInput(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
-	DoMove(MovementVector.X, MovementVector.Y);
+	if (GetController())
+	{
+		AddMovementInput(GetActorRightVector(), MovementVector.X);
+		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	}
 }
 
 void AMHGACharacter::LookInput(const FInputActionValue& Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	DoAim(LookAxisVector.X, LookAxisVector.Y);
+	if (GetController())
+	{
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
 }
 
 void AMHGACharacter::PickInput(const FInputActionValue& Value)
 {
-	PRINTLOG(TEXT("PICK!"));
+	InteractComponent->InteractProps();
 }
 
 void AMHGACharacter::UseInput(const FInputActionValue& Value)
 {
-	PRINTLOG(TEXT("USE!"));
-}
-
-void AMHGACharacter::DoAim(float Yaw, float Pitch)
-{
-	if (GetController())
-	{
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
-	}
-}
-
-void AMHGACharacter::DoMove(float Right, float Forward)
-{
-	if (GetController())
-	{
-		AddMovementInput(GetActorRightVector(), Right);
-		AddMovementInput(GetActorForwardVector(), Forward);
-	}
+	InteractComponent->UseProps();
 }
