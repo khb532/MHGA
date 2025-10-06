@@ -26,11 +26,24 @@ UENUM(BlueprintType)
 enum class EBurgerMenu : uint8
 {
 	None				UMETA(DisplayName = "None"),
+	WrongBurger			UMETA(DisplayName = "WrongBurger"),
 	BigMac				UMETA(DisplayName = "BigMac"),
 	BTD					UMETA(DisplayName = "BTD"),
 	QPC					UMETA(DisplayName = "QPC"),
 	Shanghai			UMETA(DisplayName = "Shanghai"),
-	Shrimp				UMETA(DisplayName = "Shrimp")
+	Shrimp				UMETA(DisplayName = "Shrimp"),
+};
+
+USTRUCT(BlueprintType)
+struct FIngredientStack
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    EIngredient  IngredientId;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 Quantity = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -42,5 +55,5 @@ public:
 	EBurgerMenu BurgerName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<EIngredient, int32> IngredientsMap;
+	TArray<FIngredientStack> Ingredients;
 };
