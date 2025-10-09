@@ -61,6 +61,7 @@ protected:
 	void LookInput(const FInputActionValue& Value);
 	void PickInput(const FInputActionValue& Value);
 	void UseInput(const FInputActionValue& Value);
+	void UseInputRelease(const FInputActionValue& Value);
 
 
 public:

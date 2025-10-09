@@ -77,6 +77,7 @@ void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(IA_Look, ETriggerEvent::Triggered, this, &AMHGACharacter::LookInput);
 		EnhancedInputComponent->BindAction(IA_Pick, ETriggerEvent::Started, this, &AMHGACharacter::PickInput);
 		EnhancedInputComponent->BindAction(IA_Use, ETriggerEvent::Started, this, &AMHGACharacter::UseInput);
+		EnhancedInputComponent->BindAction(IA_Use, ETriggerEvent::Completed, this, &AMHGACharacter::UseInputRelease);
 	}
 }
 
@@ -112,4 +113,9 @@ void AMHGACharacter::UseInput(const FInputActionValue& Value)
 
 	//use prop
 	InteractComponent->UseProps();
+}
+
+void AMHGACharacter::UseInputRelease(const FInputActionValue& Value)
+{
+	WidgetInteraction->ReleasePointerKey(EKeys::LeftMouseButton);
 }
