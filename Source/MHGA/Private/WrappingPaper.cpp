@@ -1,8 +1,8 @@
-
-#include "MHGA.h"
 #include "WrappingPaper.h"
+#include "MHGA.h"
 #include "Components/BoxComponent.h"
 #include "Ingredient/IngredientBase.h"
+#include "Kismet/GameplayStatics.h"
 
 
 AWrappingPaper::AWrappingPaper()
@@ -10,40 +10,61 @@ AWrappingPaper::AWrappingPaper()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Collision = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
-	Collision->SetupAttachment(RootComponent);
-	Collision->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	SetRootComponent(Collision);
+	
+	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	Mesh->SetupAttachment(RootComponent);
 }
-
 
 void AWrappingPaper::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	Collision->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 	Collision->OnComponentBeginOverlap.AddDynamic(this, &AWrappingPaper::AddIngredient);
 
 	Collision->OnComponentEndOverlap.AddDynamic(this, &AWrappingPaper::MinusIngredient);
 	
 }
 
+void AWrappingPaper::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShowLog)
+		PrintLog();
+
+	if (OnAreaIngredients.IsEmpty())
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, TEXT("No Ingredients on WrappingPaper"), false);
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, TEXT("Ingredients Alive"), false);
+}
+
 void AWrappingPaper::AddIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	GEngine->AddOnScreenDebugMessage(1, 2.f, FColor::Yellow, "On Overlapped & AddIngredient");
 	FIngredientStack Prop;
-	/*
-	 *if (OtherActor = 햄버거재료)
-	 *Prop.IngredientId = 햄버거재료.IngredientID;
-	 *Prop.Quantity ++
-	 *
-	 *else
-	 *Prop.IngredientId = None
-	 *Quantity++
-	 *
-	 *
-	*/
+	Prop.Quantity++;
+	if (OtherActor == nullptr || OtherActor == this) return;
+	 // if (OtherActor = 햄버거재료)
+	AIngredientBase* OtherIngredient = Cast<AIngredientBase>(OtherActor);
+	if (OtherIngredient == nullptr) return;
 	
+	Prop.IngredientId = OtherIngredient->GetIngType();
+	for (FIngredientStack& tmp : OnAreaIngredients)
+	{
+		if (tmp.IngredientId == OtherIngredient->GetIngType())
+		{
+			tmp.Quantity++;
+			return;
+		}
+	}
+	OnAreaIngredients.Add(Prop);
 }
 
 void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	GEngine->AddOnScreenDebugMessage(2, 2.f, FColor::Red, "Off Overlapped & MinusIngredient");
 	 // * 1. CollisionBox 를 벗어난 OtherActor 가 햄버거 재료인지 판별한다. 재료가 아니거나 nullptr 이면 조기 반환한다.
 	if (OtherActor == nullptr || OtherActor == this) return;
 	AIngredientBase* Ingredient = Cast<AIngredientBase>(OtherActor);
@@ -87,6 +108,24 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 	}
 
 	
+}
+
+void AWrappingPaper::PrintLog()
+{
+	
+	FString ActorName = this->GetActorNameOrLabel();
+	const UEnum* IngEnum = StaticEnum<EIngredient>();
+	if (IngEnum == nullptr) return;
+	if (OnAreaIngredients.Num() <= 0) return;
+	FString Str = FString::Printf(TEXT("%s\n"), *ActorName);
+	
+	for (int32 i = 0; i < OnAreaIngredients.Num(); i++)
+	{
+		FString ing = IngEnum->GetNameStringByValue(static_cast<int64>(OnAreaIngredients[i].IngredientId));
+		Str += FString::Printf(TEXT("%d 번째 재료 : %s , 수량 : %d\n"), i+1, *ing, OnAreaIngredients[i].Quantity);
+	}
+	
+	DrawDebugString(GetWorld(), GetActorLocation(), Str, nullptr, FColor::Yellow, 0);
 }
 
 TMap<EIngredient, int32> AWrappingPaper::MakeMapFromArray(const TArray<FIngredientStack>& InArray)
@@ -137,8 +176,4 @@ EBurgerMenu AWrappingPaper::FindMatchingRecipe(UDataTable* DT, const TArray<FIng
 	return EBurgerMenu::WrongBurger;
 }
 
-void AWrappingPaper::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
 

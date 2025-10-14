@@ -19,6 +19,9 @@ public:
 
 	UFUNCTION()
 	void MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+private:
+	void PrintLog();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -38,15 +41,20 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UDataTable* BurgerDataTable;
 
+	UPROPERTY(EditAnywhere)
+	class UStaticMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* Collision;
+	
+	UPROPERTY(EditAnywhere)
+	bool bShowLog = true;
+
 
 protected:
 
 
 private:
-	
-	UPROPERTY()
-	class UBoxComponent* Collision;
-
 	UPROPERTY()	// 충돌한 재료 저장
 	TArray<FIngredientStack> OnAreaIngredients;
 	

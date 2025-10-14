@@ -6,6 +6,8 @@
 ATopBread::ATopBread()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	IngType = EIngredient::TopBread;
 }
 
 void ATopBread::BeginPlay()
