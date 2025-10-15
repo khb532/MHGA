@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "AI/CustomerAI.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UCustomerFSM::UCustomerFSM()
@@ -12,7 +13,7 @@ UCustomerFSM::UCustomerFSM()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	
+
 	StateTimer = 0.f;
 }
 
@@ -25,6 +26,8 @@ void UCustomerFSM::BeginPlay()
 
 	AIController = Cast<AAIController>(me->GetController());
 
+	FindTarget();
+	
 	SetState(EAIState::GoingToLine);
 }
 
@@ -45,13 +48,14 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 		}
 	}
 
-	if (CurrentState == EAIState::GoingToLine)
-	{
-		if (FVector::Dist(me->GetActorLocation() , LineTarget->GetActorLocation()) <= 0)
-		{
-			SetState(EAIState::Ordering);
-		}
-	}
+	// if (CurrentState == EAIState::GoingToLine)
+	// {
+	// 	MoveToTarget(OrderTarget);
+	// 	if (FVector::Dist(me->GetActorLocation() , OrderTarget->GetActorLocation()) <= 0)
+	// 	{
+	// 		SetState(EAIState::Ordering);
+	// 	}
+	// }
 
 	if (CurrentState == EAIState::GoingToPickup)
 	{
@@ -89,7 +93,7 @@ void UCustomerFSM::SetState(EAIState NewState)
 	case EAIState::GoingToLine:
 		{
 			// 줄서기 위치까지 이동
-			MoveToTarget(LineTarget->GetActorLocation());
+			MoveToTarget(OrderTarget);
 			break;
 		}
 		
@@ -120,13 +124,15 @@ void UCustomerFSM::SetState(EAIState NewState)
 		
 	case EAIState::GoingToPickup:
 		{
-			MoveToTarget(PickupTarget->GetActorLocation());
+			if (PickupTarget == nullptr) return;
+			MoveToTarget(PickupTarget);
 			break;
 		}
 		
 	case EAIState::Exit:
 		{
-			MoveToTarget(ExitTarget->GetActorLocation());
+			if (ExitTarget == nullptr) return;
+			MoveToTarget(ExitTarget);
 			break;
 		}
 	case EAIState::None:
@@ -138,6 +144,20 @@ void UCustomerFSM::SetState(EAIState NewState)
 	}
 }
 
+void UCustomerFSM::FindTarget()
+{
+	TArray<AActor*> allActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), allActors);
+	for (auto target: allActors)
+	{
+		// 이름이 spawnpoint 녀석을 배열에 추가
+		if (target->GetName().Contains(TEXT("Target")))
+		{
+			targetPoints.Add(target);
+		}
+	}
+	OrderTarget = targetPoints[0];
+}
 
 
 void UCustomerFSM::OnOrderCompleted()
@@ -197,10 +217,10 @@ void UCustomerFSM::ExitStore()
 {
 }
 
-void UCustomerFSM::MoveToTarget(const FVector& targetLocation)
+void UCustomerFSM::MoveToTarget(const AActor* target)
 {
-	if (AIController)
+	if (target)
 	{
-		AIController->MoveToLocation(targetLocation);
+		AIController->MoveToLocation(target->GetActorLocation());
 	}
 }

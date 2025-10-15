@@ -40,8 +40,6 @@ public:
 	
 private:
 	class AAIController* AIController;
-
-	
 	
 public:
 	// == 핵심 데이터 ==
@@ -61,21 +59,26 @@ public:
 
 	// == 위치정보 ==
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	AActor* OrderTarget;	// 주문 위치
+	class AActor* OrderTarget;	// 주문 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	AActor* LineTarget;		// 대기열 위치
+	class AActor* LineTarget;		// 대기열 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	AActor* PickupTarget;	// 음식 수령 위치
+	class AActor* PickupTarget;	// 음식 수령 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	AActor* ExitTarget;		// 퇴장 위치
+	class AActor* ExitTarget;		// 퇴장 위치
 
 public:
 	// == 함수 ==
 	void SetState(EAIState NewState);
 
+	UFUNCTION()
+	void FindTarget();
+	UPROPERTY(EditAnywhere, Category="AI Navigation")
+	TArray<AActor*> targetPoints;
+	
 	UFUNCTION()
 	void EnterStore();
 	UFUNCTION()
@@ -100,6 +103,6 @@ public:
 	void ReceiveFood(const FString& receivedFood);
 	
 	UFUNCTION()
-	void MoveToTarget(const FVector& targetLocation);
+	void MoveToTarget(const AActor* target);
 		
 };

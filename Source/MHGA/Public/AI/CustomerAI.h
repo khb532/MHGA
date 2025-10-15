@@ -25,7 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Blueprintable)
 	class UCustomerFSM* fsm;
 	
 };
