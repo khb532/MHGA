@@ -10,6 +10,7 @@
 #include "MHGA.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "Player/InteractComponent.h"
+#include "Player/PlayerAnim.h"
 
 AMHGACharacter::AMHGACharacter()
 {
@@ -21,10 +22,13 @@ AMHGACharacter::AMHGACharacter()
 	GetMesh()->SetCollisionProfileName(FName("NoCollision"));
 	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	ConstructorHelpers::FClassFinder<UPlayerAnim> ani(TEXT("/Script/Engine.AnimBlueprint'/Game/Blueprints/Anim/ABP_Player.ABP_Player_C'"));
+	if (ani.Succeeded())
+		GetMesh()->AnimClass =ani.Class;
 
 	FPSCamComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
 	FPSCamComponent->SetupAttachment(GetMesh());
-	FPSCamComponent->SetRelativeLocationAndRotation(FVector(0, -15, 20), FRotator(90.0f, 0, 0));
+	FPSCamComponent->SetRelativeLocationAndRotation(FVector(0, -15, 20), FRotator(90, 90, 0));
 	FPSCamComponent->bUsePawnControlRotation = true;
 	FPSCamComponent->bEnableFirstPersonFieldOfView = true;
 	FPSCamComponent->bEnableFirstPersonScale = true;

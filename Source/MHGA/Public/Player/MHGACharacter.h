@@ -20,7 +20,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 /**
  *  A basic first person character
  */
-UCLASS(abstract)
+UCLASS()
 class AMHGACharacter : public ACharacter
 {
 	GENERATED_BODY()
