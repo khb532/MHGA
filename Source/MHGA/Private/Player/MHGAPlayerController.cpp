@@ -6,6 +6,8 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "MHGACameraManager.h"
+#include "MHGAGameState.h"
+#include "Counter/CounterPOS.h"
 
 AMHGAPlayerController::AMHGAPlayerController()
 {
@@ -19,6 +21,9 @@ AMHGAPlayerController::AMHGAPlayerController()
 void AMHGAPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	AMHGAGameState* gs = Cast<AMHGAGameState>(GetWorld()->GetGameState());
+	CounterPos = gs->GetCounter();
 }
 
 void AMHGAPlayerController::SetupInputComponent()
@@ -31,4 +36,39 @@ void AMHGAPlayerController::SetupInputComponent()
 			Subsystem->AddMappingContext(IMC, 0);
 	}
 	
+}
+
+void AMHGAPlayerController::ServerRPC_OnClickCustomerBtn_Implementation()
+{
+	CounterPos->MulticastRPC_OnClickCustomerBtn();
+}
+
+void AMHGAPlayerController::ServerRPC_OnClickMenuBtn_Implementation()
+{
+	CounterPos->MulticastRPC_OnClickMenuBtn();
+}
+
+void AMHGAPlayerController::ServerRPC_OrderMenuBtn_Implementation()
+{
+	CounterPos->MulticastRPC_OrderMenuBtn();
+}
+
+void AMHGAPlayerController::ServerRPC_DeleteListBtn_Implementation()
+{
+	CounterPos->MulticastRPC_DeleteListBtn();
+}
+
+void AMHGAPlayerController::ServerRPC_OnMenuReadyBtn_Implementation()
+{
+	CounterPos->MulticastRPC_OnMenuReadyBtn();
+}
+
+void AMHGAPlayerController::ServerRPC_AddMenuToList_Implementation(const EBurgerMenu MenuName)
+{
+	CounterPos->MulticastRPC_AddMenuToList(MenuName);
+}
+
+void AMHGAPlayerController::ServerRPC_CustomerOrderedMenu_Implementation(int32 CustomerNum)
+{
+	CounterPos->MulticastRPC_CustomerOrderedMenu(CustomerNum);
 }

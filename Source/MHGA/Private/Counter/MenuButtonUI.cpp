@@ -4,6 +4,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Counter/CounterUI.h"
+#include "Player/MHGAPlayerController.h"
 
 void UMenuButtonUI::NativeConstruct()
 {
@@ -14,7 +15,8 @@ void UMenuButtonUI::NativeConstruct()
 
 void UMenuButtonUI::OnClickedMenu()
 {
-	CounterUI->AddMenuToList(MenuName);
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_AddMenuToList(MenuName);
 	
 	PRINTLOG(TEXT("OnClickedMenu"));
 }

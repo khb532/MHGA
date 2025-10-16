@@ -1,8 +1,10 @@
 #include "Counter/CounterPOS.h"
 
 #include "MHGA.h"
+#include "Components/UniformGridPanel.h"
 #include "Components/WidgetComponent.h"
 #include "Counter/CounterUI.h"
+#include "Counter/CustomerButtonUI.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -38,29 +40,19 @@ void ACounterPOS::BeginPlay()
 	CounterUI = Cast<UCounterUI>(WidgetComponent->GetWidget());
 	if (CounterUI)
 		CounterUI->SetPosActor(this);
-
-	if (ULocalPlayer* LP = GetWorld()->GetFirstLocalPlayerFromController())
-	{
-		WidgetComponent->SetOwnerPlayer(LP);
-	}
 	
-	if (HasAuthority())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[%s] Server has ACounterPOS"), *GetName());
-	}
-	else
-		UE_LOG(LogTemp, Warning, TEXT("[%s] Client has ACounterPOS"), *GetName());
+	// if (HasAuthority())
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("[%s] Server has ACounterPOS"), *GetName());
+	// }
+	// else
+	// 	UE_LOG(LogTemp, Warning, TEXT("[%s] Client has ACounterPOS"), *GetName());
 }
 
 void ACounterPOS::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	PrintNetLog();
-
-	if (HasAuthority())
-	{
-		//SetOwner(GetWorld()->GetFirstPlayerController());
-	}
 }
 
 void ACounterPOS::MulticastRPC_OnClickCustomerBtn_Implementation()
@@ -92,36 +84,29 @@ void ACounterPOS::MulticastRPC_OnMenuReadyBtn_Implementation()
 	CounterUI->OnMenuReadyBtnRPC();
 }
 
-
-void ACounterPOS::ServerRPC_OnClickCustomerBtn_Implementation()
+void ACounterPOS::MulticastRPC_AddMenuToList_Implementation(const EBurgerMenu MenuName)
 {
-	PRINTINFO();
+	CounterUI->AddMenuToListRPC(MenuName);
+}
+
+void ACounterPOS::MulticastRPC_CustomerOrderedMenu_Implementation(int32 CustomerNum)
+{
+	UCustomerButtonUI* TargetBtn = nullptr;
+	const TArray<UWidget*>& C = CounterUI->GetCustomerGrid()->GetAllChildren();
+	for (UWidget* Widget : C)
+	{
+		if (UCustomerButtonUI* Btn = Cast<UCustomerButtonUI>(Widget))
+		{
+			if (Btn->GetNum() == CustomerNum)
+			{
+				TargetBtn = Btn;
+				break;
+			}
+		}
+	}
 	
-	MulticastRPC_OnClickCustomerBtn();
+	CounterUI->CustomerOrderedMenuRPC(TargetBtn);
 }
-
-void ACounterPOS::ServerRPC_OnClickMenuBtn_Implementation()
-{
-	PRINTINFO();
-	
-	MulticastRPC_OnClickMenuBtn();
-}
-
-void ACounterPOS::ServerRPC_OrderMenuBtn_Implementation()
-{
-	MulticastRPC_OrderMenuBtn();
-}
-
-void ACounterPOS::ServerRPC_DeleteListBtn_Implementation()
-{
-	MulticastRPC_DeleteListBtn();
-}
-
-void ACounterPOS::ServerRPC_OnMenuReadyBtn_Implementation()
-{
-	MulticastRPC_OnMenuReadyBtn();
-}
-
 
 void ACounterPOS::PrintNetLog()
 {

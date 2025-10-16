@@ -98,9 +98,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetPosActor(ACounterPOS* Pos);
 	UFUNCTION(BlueprintCallable)
-	void AddMenuToList(const EBurgerMenu MenuName);
-	UFUNCTION(BlueprintCallable)
-	void OrderedMenu(UCustomerButtonUI* Btn);
+	UUniformGridPanel* GetCustomerGrid() {return CustomerGrid;}
 
 	
 	UFUNCTION()
@@ -113,4 +111,8 @@ public:
 	void DeleteListBtnRPC();
 	UFUNCTION()
 	void OnMenuReadyBtnRPC();
+	UFUNCTION()
+	void AddMenuToListRPC(const EBurgerMenu MenuName);
+	UFUNCTION()
+	void CustomerOrderedMenuRPC(UCustomerButtonUI* Btn);
 };

@@ -70,60 +70,39 @@ void UCounterUI::SetPosActor(ACounterPOS* Pos)
 
 void UCounterUI::OnClickCustomerBtn()
 {
-	PRINTINFO();
-
-	PosActor->ServerRPC_OnClickCustomerBtn();
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_OnClickCustomerBtn();
+	//PosActor->ServerRPC_OnClickCustomerBtn();
 }
 
 void UCounterUI::OnClickMenuBtn()
 {
-	PRINTINFO();
-
-	PosActor->ServerRPC_OnClickMenuBtn();
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_OnClickMenuBtn();
+	//PosActor->ServerRPC_OnClickMenuBtn();
 }
 
 void UCounterUI::OrderMenuBtn()
 {
-	PosActor->ServerRPC_OrderMenuBtn();
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_OrderMenuBtn();
+	//PosActor->ServerRPC_OrderMenuBtn();
 }
 
 void UCounterUI::DeleteListBtn()
 {
-	PosActor->ServerRPC_DeleteListBtn();
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_DeleteListBtn();
+	//PosActor->ServerRPC_DeleteListBtn();
 }
 
 void UCounterUI::OnMenuReadyBtn()
 {
-	PosActor->ServerRPC_OnMenuReadyBtn();
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_OnMenuReadyBtn();
+	//PosActor->ServerRPC_OnMenuReadyBtn();
 }
 
-void UCounterUI::AddMenuToList(const EBurgerMenu MenuName)
-{
-	UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
-	if (NewText)
-	{
-		OrderList.Add(MenuName);
-		NewText->SetText(MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(MenuName)));
-		SelectedListBox->AddChildToVerticalBox(NewText);
-	}
-}
-
-void UCounterUI::OrderedMenu(UCustomerButtonUI* Btn)
-{
-	MenuListBox->ClearChildren();
-	
-	CustomerBtn = Btn;
-	TArray<EBurgerMenu> Menu = CustomerBtn->GetMenuInfo();
-	for (EBurgerMenu M : Menu)
-	{
-		UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
-		if (NewText)
-		{
-			NewText->SetText(MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(M)));
-			MenuListBox->AddChildToVerticalBox(NewText);
-		}
-	}
-}
 
 void UCounterUI::OnClickCustomerBtnRPC()
 {
@@ -209,4 +188,32 @@ void UCounterUI::OnMenuReadyBtnRPC()
 	//TODO : 손님 호출
 	
 	CustomerBtn = nullptr;
+}
+
+void UCounterUI::AddMenuToListRPC(const EBurgerMenu MenuName)
+{
+	UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
+	if (NewText)
+	{
+		OrderList.Add(MenuName);
+		NewText->SetText(MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(MenuName)));
+		SelectedListBox->AddChildToVerticalBox(NewText);
+	}
+}
+
+void UCounterUI::CustomerOrderedMenuRPC(UCustomerButtonUI* Btn)
+{
+	MenuListBox->ClearChildren();
+	
+	CustomerBtn = Btn;
+	TArray<EBurgerMenu> Menu = Btn->GetMenuInfo();
+	for (EBurgerMenu M : Menu)
+	{
+		UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
+		if (NewText)
+		{
+			NewText->SetText(MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(M)));
+			MenuListBox->AddChildToVerticalBox(NewText);
+		}
+	}
 }

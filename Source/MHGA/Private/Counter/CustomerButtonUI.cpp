@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Counter/CounterUI.h"
+#include "Player/MHGAPlayerController.h"
 
 void UCustomerButtonUI::NativeConstruct()
 {
@@ -12,7 +13,8 @@ void UCustomerButtonUI::NativeConstruct()
 
 void UCustomerButtonUI::OnClickedBtn()
 {
-	CounterUI->OrderedMenu(this);
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->ServerRPC_CustomerOrderedMenu(Num);
 }
 
 void UCustomerButtonUI::Init(TArray<EBurgerMenu> InMenu, int32 InNum, UCounterUI* InOwner)

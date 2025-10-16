@@ -69,7 +69,7 @@ void AMHGACharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	if (IsLocallyControlled() == false) WidgetInteraction->Deactivate();
 }
 
 void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
