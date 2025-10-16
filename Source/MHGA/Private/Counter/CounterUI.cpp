@@ -9,6 +9,7 @@
 #include "Components/VerticalBox.h"
 #include "Counter/MenuButtonUI.h"
 #include "Counter/CustomerButtonUI.h"
+#include "Counter/ReceiptActor.h"
 
 
 UCounterUI::UCounterUI(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
@@ -102,9 +103,12 @@ void UCounterUI::OrderedMenu(UCustomerButtonUI* Btn)
 
 void UCounterUI::OrderMenuBtn()
 {
+	if (OrderList.Num() < 1) return;
+	
 	OrderMap.FindOrAdd(OrderNum) = {OrderList};
-	PRINTLOG(TEXT("%d, %d"), OrderNum, OrderMap[OrderNum].Menus.Num());
+	//PRINTLOG(TEXT("%d, %d"), OrderNum, OrderMap[OrderNum].Menus.Num());
 
+	//주문완료 시 해당 주문 번호 버튼 생성
 	UCustomerButtonUI* NewCustomerBtn = CreateWidget<UCustomerButtonUI>(GetWorld(), CustomerButtonClass);
 	if (NewCustomerBtn)
 	{
@@ -116,7 +120,20 @@ void UCounterUI::OrderMenuBtn()
 		CustomerGrid->AddChildToUniformGrid(NewCustomerBtn, Row, Col);
 	}
 	
-	//TODO : 화면에 띄운다거나 AI가 주문을 마친 후 로직 추가
+	//영수증 출력
+	AReceiptActor* NewReceipt = GetWorld()->SpawnActor<AReceiptActor>(AReceiptActor::StaticClass());
+	if (NewReceipt)
+	{
+		TArray<FString> MenuStrings;
+		for (EBurgerMenu Menu : OrderList)
+		{
+			FString MenuName = MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(Menu)).ToString();
+			MenuStrings.Add(MenuName);
+		}
+		NewReceipt->Init(OrderNum, MenuStrings);
+	}
+	
+	//TODO : AI가 주문을 마친 후 로직 추가
 
 	OrderNum++;
 	DeleteListBtn();

@@ -25,7 +25,7 @@ public class MHGA : ModuleRules
 
 		PublicIncludePaths.AddRange(new string[] {
 			"MHGA",
-			"MHGA/public",
+			"MHGA/Public",
 			"MHGA/Private"
 		});
 

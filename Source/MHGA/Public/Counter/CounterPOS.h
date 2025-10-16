@@ -30,7 +30,9 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	UCounterUI* CounterUI;
-	
-public:
 
+	//UPROPERTY(EditAnywhere)
+	//AActor* CurrentCustomer;
+public:
+	//TODO : 손님 get, set
 };

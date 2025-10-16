@@ -10,37 +10,36 @@
 #include "MHGA.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "Player/InteractComponent.h"
+#include "Player/PlayerAnim.h"
 
 AMHGACharacter::AMHGACharacter()
 {
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(30.f, 90.0f);
 	
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> sk(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Standing_W_Briefcase_Idle.Standing_W_Briefcase_Idle'"));
+	if (sk.Succeeded())
+		GetMesh()->SetSkeletalMesh(sk.Object);
+	GetMesh()->SetCollisionProfileName(FName("NoCollision"));
+	GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -90.f));
+	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	ConstructorHelpers::FClassFinder<UPlayerAnim> ani(TEXT("/Script/Engine.AnimBlueprint'/Game/Blueprints/Anim/ABP_Player.ABP_Player_C'"));
+	if (ani.Succeeded())
+		GetMesh()->AnimClass =ani.Class;
 
-	FirstPersonMesh->SetupAttachment(GetMesh());
-	FirstPersonMesh->SetOnlyOwnerSee(true);
-	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
-
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
-	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
-	FirstPersonCameraComponent->bEnableFirstPersonScale = true;
-	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
-	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
-
-	GetMesh()->SetOwnerNoSee(true);
-	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
-
-	GetCapsuleComponent()->SetCapsuleSize(34.0f, 96.0f);
+	FPSCamComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
+	FPSCamComponent->SetupAttachment(GetMesh());
+	FPSCamComponent->SetRelativeLocationAndRotation(FVector(0, -15, 20), FRotator(90, 90, 0));
+	FPSCamComponent->bUsePawnControlRotation = true;
+	FPSCamComponent->bEnableFirstPersonFieldOfView = true;
+	FPSCamComponent->bEnableFirstPersonScale = true;
+	FPSCamComponent->FirstPersonFieldOfView = 70.0f;
+	FPSCamComponent->FirstPersonScale = 0.6f;
 
 	//comps
 	InteractComponent = CreateDefaultSubobject<UInteractComponent>(TEXT("InteractComponent"));
 	
 	WidgetInteraction = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("WidgetInteraction"));
-	WidgetInteraction->SetupAttachment(FirstPersonCameraComponent);
+	WidgetInteraction->SetupAttachment(FPSCamComponent);
 	WidgetInteraction->InteractionDistance = 200.f;
 	// 디버그 라인 표시 (테스트용)
 	WidgetInteraction->bShowDebug = true;

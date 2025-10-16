@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CounterUI.generated.h"
 
+class AReceiptActor;
 class UCustomerButtonUI;
 class UCanvasPanel;
 class UUniformGridPanel;
