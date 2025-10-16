@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BurgerData.h"
 #include "Components/ActorComponent.h"
 #include "CustomerFSM.generated.h"
 
@@ -81,10 +82,23 @@ public:
 	
 	UFUNCTION()
 	void EnterStore();
+	
 	UFUNCTION()
 	void StartWandering();
-	UFUNCTION()
+	FVector randomPos;
+	bool GetRandomPositionInNavMesh(const FVector& centerPos, const float radius, FVector& dest);
+
+	// 주문 시작 함수
+	UFUNCTION(Category= "AI Order")
 	void StartOrder();
+	// 주문한 메뉴 저장하는 변수
+	UPROPERTY(EditAnywhere, Category = "AI Order")
+	EBurgerMenu OrderedMenu;
+	// 주문한 메뉴를 텍스트로 반환하는 함수
+	UFUNCTION(BlueprintPure, Category = "AI Order")
+	FText GetOrderedMenuAsText();
+
+	
 	UFUNCTION()
 	void FinishOrder();
 	UFUNCTION()

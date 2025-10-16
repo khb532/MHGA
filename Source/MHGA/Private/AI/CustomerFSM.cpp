@@ -4,8 +4,13 @@
 #include "AI/CustomerFSM.h"
 
 #include "AIController.h"
+#include "BurgerData.h"
+#include "CustomerUI.h"
+#include "NavigationSystem.h"
 #include "AI/CustomerAI.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Navigation/PathFollowingComponent.h"
 
 // Sets default values for this component's properties
 UCustomerFSM::UCustomerFSM()
@@ -27,8 +32,8 @@ void UCustomerFSM::BeginPlay()
 	AIController = Cast<AAIController>(me->GetController());
 
 	FindTarget();
-	
-	SetState(EAIState::GoingToLine);
+
+	EnterStore();
 }
 
 
@@ -37,6 +42,15 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (CurrentState == EAIState::GoingToLine)
+	{
+		if (FVector::Dist2D(me->GetActorLocation() , OrderTarget->GetActorLocation()) <= 100)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("주문 시작"))
+			SetState(EAIState::Ordering);
+		}
+	}
+	
 	// 지속되는 상태만 처리
 	if (CurrentState == EAIState::WaitingForFood)
 	{
@@ -48,13 +62,6 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 		}
 	}
 
-	if (CurrentState == EAIState::GoingToLine)
-	{
-		if (FVector::Dist(me->GetActorLocation() , OrderTarget->GetActorLocation()) <= 0)
-		{
-			SetState(EAIState::Ordering);
-		}
-	}
 
 	if (CurrentState == EAIState::GoingToPickup)
 	{
@@ -93,6 +100,7 @@ void UCustomerFSM::SetState(EAIState NewState)
 		{
 			// 줄서기 위치까지 이동
 			MoveToTarget(OrderTarget);
+			UE_LOG(LogTemp, Warning, TEXT("주문하러 이동중"))
 			break;
 		}
 		
@@ -190,18 +198,76 @@ void UCustomerFSM::ReceiveFood(const FString& receivedFood)
 
 void UCustomerFSM::EnterStore()
 {
+	SetState(EAIState::GoingToLine);
 }
 
 void UCustomerFSM::StartWandering()
 {
+	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+
+	auto result = AIController->MoveToLocation(randomPos);
+	if (result == EPathFollowingRequestResult::Type::AlreadyAtGoal || result == EPathFollowingRequestResult::Failed)
+	{
+		GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
+	}
+}
+
+bool UCustomerFSM::GetRandomPositionInNavMesh(const FVector& centerPos, const float radius, FVector& dest)
+{
+	// 네비게이션 시스템 가져오기
+	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	// 랜덤 위치 가져오기
+	FNavLocation loc;
+	bool bResult = ns->GetRandomReachablePointInRadius(centerPos, radius, loc);
+	dest = loc.Location;
+	return bResult;
 }
 
 void UCustomerFSM::StartOrder()
 {
+	// 랜덤으로 선택할 메뉴의 최소인덱스와 최대인덱스를 정수로 가져온다
+	int32 MinMenuIndex = static_cast<int32>(EBurgerMenu::BigMac);
+	int32 MaxMenuIndex = static_cast<int32>(EBurgerMenu::Shrimp);
+	
+	// 해당 범위 내에서 랜덤 정수를 선택한다
+	int32 RandomMenuIndex = FMath::RandRange(MinMenuIndex, MaxMenuIndex);
+
+	// 랜덤으로 선택된 정수를 enum 타입으로 변환해 변수에 저장한다
+	OrderedMenu = static_cast<EBurgerMenu>(RandomMenuIndex);
+
+	// UEnum*을 찾아 enum 값을 문자열로 변환합니다.
+	const UEnum* BurgerEnum = FindObject<UEnum>(nullptr, TEXT("/Script/MHGA.EBurgerMenu"), true);
+	if (BurgerEnum)
+	{
+		FString EnumAsString = BurgerEnum->GetNameStringByValue(static_cast<int64>(OrderedMenu));
+		UE_LOG(LogTemp, Warning, TEXT("주문 메뉴 결정: %s"), *EnumAsString);
+	}
+	
+	me->ShowOrderUI();
+}
+
+FText UCustomerFSM::GetOrderedMenuAsText()
+{
+	switch (OrderedMenu)
+	{
+		case EBurgerMenu::BigMac:
+		return NSLOCTEXT("BurgerMenu", "BicMac", "빅맥");
+	case EBurgerMenu::BTD:
+		return NSLOCTEXT("BurgerMenu", "BTD", "베토디");
+	case EBurgerMenu::QPC:
+		return NSLOCTEXT("BurgerMenu", "QPC", "쿼파치");
+	case EBurgerMenu::Shanghai:
+		return NSLOCTEXT("BurgerMenu", "Shanghai", "상하이");
+	case EBurgerMenu::Shrimp:
+		return NSLOCTEXT("BurgerMenu", "Shrimp", "새우 버거");
+	default:
+		return FText::GetEmpty();
+	}
 }
 
 void UCustomerFSM::FinishOrder()
 {
+	SetState(EAIState::WaitingForFood);
 }
 
 void UCustomerFSM::CallToPickup()

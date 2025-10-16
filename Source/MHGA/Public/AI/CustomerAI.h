@@ -25,7 +25,23 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	UPROPERTY(EditAnywhere, Blueprintable)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UCustomerFSM* fsm;
+
+	// FSM의 데이터를 대신 전달해주는 '대리인' 함수
+	UFUNCTION(BlueprintPure, Category = "AI Order")
+	FText GetOrderTextFromFSM();
+	
+	// 에디터에서 지정할 위젯 블루프린트
+	UPROPERTY(EditAnywhere, Category = "AI Order")
+	TSubclassOf<UUserWidget> orderWidget;
+	// 생성된 위젯의 인스턴스를 저장할 변수
+	UPROPERTY(EditAnywhere, Category = "AI Order")
+	TObjectPtr<UUserWidget> orderWidgetInst;
+	// UI 표시하기 / 숨기기
+	UFUNCTION(BlueprintCallable, Category = "AI Order")
+	void ShowOrderUI();
+	UFUNCTION(BlueprintCallable, Category = "AI Order")
+	void HideOrderUI();
 	
 };
