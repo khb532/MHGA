@@ -25,6 +25,6 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		Speed = FVector::DotProduct(OwnerPlayer->GetVelocity(), OwnerPlayer->GetActorForwardVector())/OwnerPlayer->GetCharacterMovement()->GetMaxSpeed();
 		Dir = FVector::DotProduct(OwnerPlayer->GetVelocity(), OwnerPlayer->GetActorRightVector())/OwnerPlayer->GetCharacterMovement()->GetMaxSpeed();
 
-		CameraRotX = OwnerPlayer->GetControlRotation().Pitch;
+		CameraRotX = -OwnerPlayer->GetBaseAimRotation().Pitch;
 	}
 }

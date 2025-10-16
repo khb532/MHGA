@@ -7,9 +7,11 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/VerticalBox.h"
+#include "Counter/CounterPOS.h"
 #include "Counter/MenuButtonUI.h"
 #include "Counter/CustomerButtonUI.h"
 #include "Counter/ReceiptActor.h"
+#include "Player/MHGAPlayerController.h"
 
 
 UCounterUI::UCounterUI(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer)
@@ -61,16 +63,38 @@ void UCounterUI::NativeConstruct()
 	CustomerCanvas->SetVisibility(ESlateVisibility::Hidden);
 }
 
+void UCounterUI::SetPosActor(ACounterPOS* Pos)
+{
+	PosActor = Pos;
+}
+
 void UCounterUI::OnClickCustomerBtn()
 {
-	CustomerCanvas->SetVisibility(ESlateVisibility::Visible);
-	OrderCanvas->SetVisibility(ESlateVisibility::Hidden);
+	PRINTINFO();
+
+	PosActor->ServerRPC_OnClickCustomerBtn();
 }
 
 void UCounterUI::OnClickMenuBtn()
 {
-	CustomerCanvas->SetVisibility(ESlateVisibility::Hidden);
-	OrderCanvas->SetVisibility(ESlateVisibility::Visible);
+	PRINTINFO();
+
+	PosActor->ServerRPC_OnClickMenuBtn();
+}
+
+void UCounterUI::OrderMenuBtn()
+{
+	PosActor->ServerRPC_OrderMenuBtn();
+}
+
+void UCounterUI::DeleteListBtn()
+{
+	PosActor->ServerRPC_DeleteListBtn();
+}
+
+void UCounterUI::OnMenuReadyBtn()
+{
+	PosActor->ServerRPC_OnMenuReadyBtn();
 }
 
 void UCounterUI::AddMenuToList(const EBurgerMenu MenuName)
@@ -101,18 +125,34 @@ void UCounterUI::OrderedMenu(UCustomerButtonUI* Btn)
 	}
 }
 
-void UCounterUI::OrderMenuBtn()
+void UCounterUI::OnClickCustomerBtnRPC()
+{
+	PRINTINFO();
+	
+	CustomerCanvas->SetVisibility(ESlateVisibility::Visible);
+	OrderCanvas->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UCounterUI::OnClickMenuBtnRPC()
+{
+	PRINTINFO();
+	
+	CustomerCanvas->SetVisibility(ESlateVisibility::Hidden);
+	OrderCanvas->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UCounterUI::OrderMenuBtnRPC()
 {
 	if (OrderList.Num() < 1) return;
 	
-	OrderMap.FindOrAdd(OrderNum) = {OrderList};
+	PosActor->OrderMap.FindOrAdd(PosActor->OrderNum) = {OrderList};
 	//PRINTLOG(TEXT("%d, %d"), OrderNum, OrderMap[OrderNum].Menus.Num());
 
 	//주문완료 시 해당 주문 번호 버튼 생성
 	UCustomerButtonUI* NewCustomerBtn = CreateWidget<UCustomerButtonUI>(GetWorld(), CustomerButtonClass);
 	if (NewCustomerBtn)
 	{
-		NewCustomerBtn->Init(OrderList, OrderNum, this);
+		NewCustomerBtn->Init(OrderList, PosActor->OrderNum, this);
 		int32 NumChildren = CustomerGrid->GetChildrenCount();
 		int32 Row = NumChildren / GridCol;
 		int32 Col = NumChildren % GridCol;
@@ -130,27 +170,27 @@ void UCounterUI::OrderMenuBtn()
 			FString MenuName = MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(Menu)).ToString();
 			MenuStrings.Add(MenuName);
 		}
-		NewReceipt->Init(OrderNum, MenuStrings);
+		NewReceipt->Init(PosActor->OrderNum, MenuStrings);
 	}
 	
 	//TODO : AI가 주문을 마친 후 로직 추가
 
-	OrderNum++;
+	PosActor->OrderNum++;
 	DeleteListBtn();
 }
 
-void UCounterUI::DeleteListBtn()
+void UCounterUI::DeleteListBtnRPC()
 {
 	OrderList.Empty();
 	SelectedListBox->ClearChildren();
 }
 
-void UCounterUI::OnMenuReadyBtn()
+void UCounterUI::OnMenuReadyBtnRPC()
 {
 	if (CustomerBtn == nullptr)
 		return;
 	
-	OrderMap.Remove(CustomerBtn->GetNum());
+	PosActor->OrderMap.Remove(CustomerBtn->GetNum());
 	MenuListBox->ClearChildren();
 	CustomerGrid->RemoveChild(CustomerBtn);
 

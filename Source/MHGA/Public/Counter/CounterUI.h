@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CounterUI.generated.h"
 
+class ACounterPOS;
 class AReceiptActor;
 class UCustomerButtonUI;
 class UCanvasPanel;
@@ -14,15 +15,6 @@ class UVerticalBox;
 class UMenuButtonUI;
 class UButton;
 class UTextBlock;
-
-USTRUCT(BlueprintType)
-struct FOrderArray
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<EBurgerMenu> Menus;
-};
 
 UCLASS()
 class MHGA_API UCounterUI : public UUserWidget
@@ -36,6 +28,9 @@ protected:
 	virtual void NativeConstruct() override;
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ACounterPOS* PosActor;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	const UEnum* MenuEnumPtr;
 
@@ -81,31 +76,41 @@ protected:
 	//OrderList
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<EBurgerMenu> OrderList;
-	UPROPERTY(EditAnywhere)
-	int32 OrderNum = 100;
-	UPROPERTY(EditAnywhere)
-	TMap<int32, FOrderArray> OrderMap;
+
 
 	//CustomerBtn
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCustomerButtonUI* CustomerBtn;
-	
+
 protected:
 	UFUNCTION(BlueprintCallable)
 	void OnClickCustomerBtn();
 	UFUNCTION(BlueprintCallable)
 	void OnClickMenuBtn();
-	
-public:
-	UFUNCTION(BlueprintCallable)
-	void AddMenuToList(const EBurgerMenu MenuName);
-	UFUNCTION(BlueprintCallable)
-	void OrderedMenu(UCustomerButtonUI* Btn);
-	
 	UFUNCTION(BlueprintCallable)
 	void OrderMenuBtn();
 	UFUNCTION(BlueprintCallable)
 	void DeleteListBtn();
 	UFUNCTION(BlueprintCallable)
 	void OnMenuReadyBtn();
+	
+public:
+	UFUNCTION(BlueprintCallable)
+	void SetPosActor(ACounterPOS* Pos);
+	UFUNCTION(BlueprintCallable)
+	void AddMenuToList(const EBurgerMenu MenuName);
+	UFUNCTION(BlueprintCallable)
+	void OrderedMenu(UCustomerButtonUI* Btn);
+
+	
+	UFUNCTION()
+	void OnClickCustomerBtnRPC();
+	UFUNCTION()
+	void OnClickMenuBtnRPC();
+	UFUNCTION()
+	void OrderMenuBtnRPC();
+	UFUNCTION()
+	void DeleteListBtnRPC();
+	UFUNCTION()
+	void OnMenuReadyBtnRPC();
 };

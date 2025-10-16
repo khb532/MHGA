@@ -26,6 +26,9 @@ AReceiptActor::AReceiptActor()
 		PaperMesh->SetMaterial(0, mat.Object);
 	PaperMesh->SetupAttachment(RootComponent);
 	PaperMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+
+	bReplicates = true;
+	SetReplicateMovement(true);
 }
 
 void AReceiptActor::BeginPlay()

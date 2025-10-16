@@ -61,11 +61,15 @@ AMHGACharacter::AMHGACharacter()
 	ConstructorHelpers::FObjectFinder<UInputAction> use(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Use.IA_Use'"));
 	if (use.Succeeded())
 		IA_Use = use.Object;
+
+	bReplicates = true;
 }
 
 void AMHGACharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
 }
 
 void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -107,14 +111,18 @@ void AMHGACharacter::PickInput(const FInputActionValue& Value)
 
 void AMHGACharacter::UseInput(const FInputActionValue& Value)
 {
-	//3d ui interact press
-	WidgetInteraction->PressPointerKey(EKeys::LeftMouseButton);
+	if (IsLocallyControlled())
+	{
+		//3d ui interact press
+		WidgetInteraction->PressPointerKey(EKeys::LeftMouseButton);
 
-	//use prop
-	InteractComponent->UseProps();
+		//use prop
+		InteractComponent->UseProps();
+	}
 }
 
 void AMHGACharacter::UseInputRelease(const FInputActionValue& Value)
 {
-	WidgetInteraction->ReleasePointerKey(EKeys::LeftMouseButton);
+	if (IsLocallyControlled())
+		WidgetInteraction->ReleasePointerKey(EKeys::LeftMouseButton);
 }
