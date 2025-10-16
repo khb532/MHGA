@@ -20,8 +20,8 @@ public:
 	UFUNCTION()
 	void MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-private:
-	void PrintLog();
+	// 레시피 매칭 결과로 햄버거를 스폰하고 포장지를 정리한다.
+	void CompleteWrapping();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -35,17 +35,21 @@ private:
 	// 성공하면 EBurgerMenu BurgerName 반환, 실패하면 EBurgerMenu::WrongBurger
 	EBurgerMenu FindMatchingRecipe(UDataTable* DT, const TArray<FIngredientStack>& WrapperIngr);
 
-	// 빵 재료가 추가된 직후 포장 조건을 점검한다.
-	void TryAutoWrap();
+	/*
+	 *폐기되었음
+	// 포장 시도
+	// void TryWrap();
+	*/
+	
 	// 현재 재료 목록에 Top/Bottom Bread가 모두 존재하는지 확인한다.
 	bool HasBreadPair() const;
 	// 빵 이외 재료가 최소 하나 이상인지 확인한다.
 	bool HasExtraIngredient() const;
-	// 레시피 매칭 결과로 햄버거를 스폰하고 포장지를 정리한다.
-	void CompleteWrapping();
+	
 	// 포장지 위 재료 액터를 파괴하고 내부 상태를 초기화한다.
 	void DestroyIngredients();
 
+	void PrintLog();
 	
 /* Field */
 public:
@@ -73,6 +77,6 @@ private:
 	TArray<TWeakObjectPtr<AActor>> OverlappingActors;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> BurgerClass;
+	TSubclassOf<class AHamburger> BurgerClass;
 	
 };

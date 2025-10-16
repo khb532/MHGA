@@ -1,9 +1,8 @@
 #include "WrappingPaper.h"
+#include "Hamburger.h"
 #include "MHGA.h"
 #include "Components/BoxComponent.h"
-#include "Compression/lz4.h"
 #include "Ingredient/IngredientBase.h"
-#include "Kismet/GameplayStatics.h"
 
 
 AWrappingPaper::AWrappingPaper()
@@ -33,18 +32,22 @@ void AWrappingPaper::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (bShowLog)
+	{
 		PrintLog();
-
-	if (OnAreaIngredients.IsEmpty())
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, TEXT("No Ingredients on WrappingPaper"), false);
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, TEXT("Ingredients Alive"), false);
+		
+		if (OnAreaIngredients.IsEmpty())
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, TEXT("No Ingredients on WrappingPaper"), false);
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Cyan, TEXT("Ingredients Alive"), false);
+	}
 }
 
 void AWrappingPaper::AddIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	// On Overlap
-	GEngine->AddOnScreenDebugMessage(1, 2.f, FColor::Yellow, "On Overlapped & AddIngredient");
+	if (bShowLog)
+		GEngine->AddOnScreenDebugMessage(1, 2.f, FColor::Yellow, "On Overlapped & AddIngredient");
+	
 	if (OtherActor == nullptr || OtherActor == this) return;
 
 	OverlappingActors.AddUnique(OtherActor);
@@ -57,24 +60,16 @@ void AWrappingPaper::AddIngredient(UPrimitiveComponent* OverlappedComponent, AAc
 	{
 		const EIngredient IngId = OtherIngredient->GetIngType();
 		Prop.IngredientId = IngId;
+		
 		for (FIngredientStack& tmp : OnAreaIngredients)
 		{
 			if (tmp.IngredientId == IngId)
 			{
 				tmp.Quantity++;
-				if (IngId == EIngredient::BottomBread || IngId == EIngredient::TopBread)
-				{
-					TryAutoWrap();
-				}
 				return;
 			}
 		}
 		OnAreaIngredients.Add(Prop);
-		
-		if (IngId == EIngredient::BottomBread || IngId == EIngredient::TopBread)
-		{
-			TryAutoWrap();
-		}
 	}
 	else
 	{
@@ -97,7 +92,10 @@ void AWrappingPaper::AddIngredient(UPrimitiveComponent* OverlappedComponent, AAc
 
 void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	GEngine->AddOnScreenDebugMessage(2, 2.f, FColor::Red, "Off Overlapped & MinusIngredient");
+	// OFF Overlap
+	if (bShowLog)
+		GEngine->AddOnScreenDebugMessage(2, 2.f, FColor::Red, "Off Overlapped & MinusIngredient");
+	
 	 // 1. Collide Out, if(Not Ingredient OR self) return
 	if (OtherActor == nullptr || OtherActor == this) return;
 
@@ -219,7 +217,7 @@ EBurgerMenu AWrappingPaper::FindMatchingRecipe(UDataTable* DT, const TArray<FIng
 	return EBurgerMenu::WrongBurger;
 }
 
-void AWrappingPaper::TryAutoWrap()
+/*void AWrappingPaper::TryWrap()
 {
 	// TODO: AddIngredient 처리 직후 호출된다; 방금 추가된 재료가 빵일 때만 호출되도록 AddIngredient에서 제어한다.
 	// TODO: HasBreadPair()로 Top/Bottom Bread가 모두 존재하는지 확인한다.
@@ -227,7 +225,7 @@ void AWrappingPaper::TryAutoWrap()
 	// TODO: 두 조건이 모두 true일 때 CompleteWrapping()을 호출한다.
 	if (HasBreadPair() && HasExtraIngredient())
 		CompleteWrapping();
-}
+}*/
 
 bool AWrappingPaper::HasBreadPair() const
 {
@@ -253,8 +251,14 @@ bool AWrappingPaper::HasBreadPair() const
 bool AWrappingPaper::HasExtraIngredient() const
 {
 	// TODO: OnAreaIngredients 배열에서 빵 이외 재료들의 총 수량을 누적한다.
+	int32 count = 0;
+	for (const FIngredientStack& tmp : OnAreaIngredients)
+	{
+		if (!(tmp.IngredientId == EIngredient::BottomBread || tmp.IngredientId == EIngredient::TopBread))
+			count++;
+	}
 	// TODO: 누적된 수량이 1 이상이면 true, 그렇지 않으면 false를 반환한다.
-	return false;
+	return count > 0 ? true : false;
 }
 
 void AWrappingPaper::CompleteWrapping()
@@ -265,12 +269,17 @@ void AWrappingPaper::CompleteWrapping()
 	EBurgerMenu CreatedBurgerName = FindMatchingRecipe(BurgerDataTable, OnAreaIngredients);
 	const UEnum* BurgerEnum = StaticEnum<EBurgerMenu>();
 	FString Str = BurgerEnum->GetNameStringByValue(static_cast<int64>(CreatedBurgerName));
-	// TODO: CompletedBurgerClass를 SpawnActor하여 햄버거 액터를 생성한다.
-	AActor* SpawnedBurger = GetWorld()->SpawnActor<AActor>(BurgerClass, this->GetActorTransform());
-	// TODO: SpawnedBurger->SetMenu()
-	// SpawnedBurger->SetName(Str);
-	// TODO: DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
+
+	if (bShowLog)
+		PRINTLOG(TEXT("%s"), *Str);
+	
 	DestroyIngredients();
+	
+	// TODO: CompletedBurgerClass를 SpawnActor하여 햄버거 액터를 생성한다.
+	AHamburger* SpawnedBurger = GetWorld()->SpawnActor<AHamburger>(BurgerClass, this->GetActorTransform());
+	// TODO: SpawnedBurger->SetMenu()
+	SpawnedBurger->SetName(Str);
+	// TODO: DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
 }
 
 void AWrappingPaper::DestroyIngredients()
