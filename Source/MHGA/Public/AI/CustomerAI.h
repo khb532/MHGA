@@ -25,7 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	class UCustomerFSM* fsm;
 
 	// FSM의 데이터를 대신 전달해주는 '대리인' 함수

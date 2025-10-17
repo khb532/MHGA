@@ -34,6 +34,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	ATargetPoint* spawnPoint;
+	
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	TSubclassOf<class ACustomerAI> spawnFactory;
 
@@ -42,10 +43,13 @@ public:
 	// 손님 줄세우기
 	UPROPERTY(EditAnywhere, Category = "Waiting Order")
 	TArray<ATargetPoint*> waitingPoints;
-
+	// 줄에서 대기중인 손님열
 	UPROPERTY(EditAnywhere, Category = "Waiting Order")
 	TArray<ACustomerAI*> waitingCustomers;
-
+	// 줄 밖에서 대기중인 손님열
+	UPROPERTY(EditAnywhere, Category = "Waiting Order")
+	TArray<ACustomerAI*> wanderingCustomers;
+	
 	UFUNCTION()
 	ATargetPoint* RequestWaitingPoint(ACustomerAI* customer);
 
@@ -54,5 +58,7 @@ public:
 
 	UFUNCTION()
 	void UpdateWaitingPosition();
+	UFUNCTION()
+	void CallNextCustomerFromWandering();
 
 };

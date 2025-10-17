@@ -48,6 +48,8 @@ public:
 	// == 핵심 데이터 ==
 	UPROPERTY()
 	class ACustomerAI* me;
+	UPROPERTY()
+	class ACustomerManager* manager;
 	
 	UPROPERTY(EditAnywhere, Category = "AI State")
 	EAIState CurrentState = EAIState::None;	// 현재 AI의 상태
@@ -62,23 +64,21 @@ public:
 
 	// == 위치정보 ==
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	class AActor* OrderTarget;	// 주문 위치
+	class ATargetPoint* OrderTarget;	// 주문 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	class AActor* LineTarget;		// 대기열 위치
+	class ATargetPoint* LineTarget;		// 대기열 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	class AActor* PickupTarget;	// 음식 수령 위치
+	class ATargetPoint* PickupTarget;	// 음식 수령 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	class AActor* ExitTarget;		// 퇴장 위치
+	class ATargetPoint* ExitTarget;		// 퇴장 위치
 
 public:
 	// == 함수 ==
 	void SetState(EAIState NewState);
 
-	UFUNCTION()
-	void FindTarget();
 	UPROPERTY(EditAnywhere, Category="AI Navigation")
 	TArray<ATargetPoint*> targetPoints;
 	
@@ -89,6 +89,10 @@ public:
 	void StartWandering();
 	FVector randomPos;
 	bool GetRandomPositionInNavMesh(const FVector& centerPos, const float radius, FVector& dest);
+	// 배회 행동을 주기적으로 실행할 타이머 핸들
+	FTimerHandle wanderTimerHandle;
+	// 배회 상태일 때 다음 목적지로 이동시키는 함수
+	void MoveToRandomLocation();
 
 	// 주문 시작 함수
 	UFUNCTION(Category= "AI Order")
@@ -99,10 +103,10 @@ public:
 	// 주문한 메뉴를 텍스트로 반환하는 함수
 	UFUNCTION(BlueprintPure, Category = "AI Order")
 	FText GetOrderedMenuAsText();
-
 	
 	UFUNCTION()
 	void FinishOrder();
+	
 	UFUNCTION()
 	void CallToPickup();
 	UFUNCTION()
@@ -111,8 +115,6 @@ public:
 	UFUNCTION()
 	void ExitStore();
 
-	UFUNCTION()
-	void OnOrderCompleted();
 	UFUNCTION()
 	void OnCalledToPickup();
 	UFUNCTION()

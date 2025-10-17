@@ -1,6 +1,8 @@
 #include "Counter/CounterUI.h"
 #include "BurgerData.h"
 #include "MHGA.h"
+#include "AI/CustomerAI.h"
+#include "AI/CustomerFSM.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
@@ -159,6 +161,19 @@ void UCounterUI::OrderMenuBtnRPC()
 	}
 	
 	//TODO : AI가 주문을 마친 후 로직 추가
+	if (PosActor->GetCustomer() == nullptr)
+	{
+		UE_LOG(LogTemp, Display, TEXT("fuckyou"));
+		
+	}
+	if (PosActor->GetCustomer()->fsm)
+	{
+	PosActor->GetCustomer()->fsm->FinishOrder();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("wtfstop"));
+	}
 	
 	PosActor->ServerRPC_SetCustomer(nullptr);
 

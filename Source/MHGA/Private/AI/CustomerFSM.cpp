@@ -6,9 +6,12 @@
 #include "AIController.h"
 #include "BurgerData.h"
 #include "CustomerUI.h"
+#include "MHGAGameState.h"
 #include "NavigationSystem.h"
 #include "AI/CustomerAI.h"
+#include "AI/CustomerManager.h"
 #include "Blueprint/UserWidget.h"
+#include "Counter/CounterPOS.h"
 #include "Engine/TargetPoint.h"
 #include "Kismet/GameplayStatics.h"
 #include "Navigation/PathFollowingComponent.h"
@@ -29,37 +32,35 @@ void UCustomerFSM::BeginPlay()
 {
 	Super::BeginPlay();
 	me = Cast<ACustomerAI>(GetOwner());
-
+	manager = Cast<ACustomerManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACustomerManager::StaticClass()));
 	AIController = Cast<AAIController>(me->GetController());
 
-	FindTarget();
-
 	EnterStore();
+
 }
 
-void UCustomerFSM::FindTarget()
-{
-	TArray<AActor*> allTarget;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), allTarget);
-	for (auto target: allTarget)
-	{
-		// 이름이 target 녀석을 배열에 추가
-		if (target->GetName().Contains(TEXT("Target")))
-		{
-			targetPoints.Add(target);
-		}
-	}
-	OrderTarget = targetPoints[0];
-}
 
 // Called every frame
 void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// const UEnum* EnumPtr = StaticEnum<EAIState>();
+	// if (EnumPtr)
+	// {
+	// 	// GetValueAsString은 "EAIState::GoingToLine" 형태의 전체 이름을 반환합니다.
+	// 	FString EnumString = EnumPtr->GetValueAsString(CurrentState);
+	//
+	// 	// (선택 사항) "EAIState::" 부분을 제거하여 "GoingToLine"만 남기면 더 깔끔합니다.
+	// 	EnumString.RemoveFromStart(TEXT("EAIState::"));
+	//
+	// 	UE_LOG(LogTemp, Warning, TEXT("현재 상태: %s"), *EnumString);
+	// 	
+	// }
+	
 	if (CurrentState == EAIState::GoingToLine)
 	{
-		if (FVector::Dist2D(me->GetActorLocation() , OrderTarget->GetActorLocation()) <= 100)
+		if (FVector::Dist2D(me->GetActorLocation() , manager->waitingPoints[0]->GetActorLocation()) <= 100)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("주문 시작"))
 			SetState(EAIState::Ordering);
@@ -106,6 +107,10 @@ void UCustomerFSM::SetState(EAIState NewState)
 	{
 		StateTimer = 0;
 	}
+	if (CurrentState == EAIState::Wandering && NewState != EAIState::Wandering)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(wanderTimerHandle);
+	}
 
 	CurrentState = NewState;
 
@@ -114,7 +119,15 @@ void UCustomerFSM::SetState(EAIState NewState)
 	case EAIState::GoingToLine:
 		{
 			// 줄서기 위치까지 이동
-			MoveToTarget(OrderTarget);
+			ATargetPoint* orderTarget = manager->RequestWaitingPoint(me);
+			if (orderTarget)
+			{
+				MoveToTarget(orderTarget);
+			}
+			else if (orderTarget == nullptr && CurrentState != EAIState::Ordering)
+			{
+				SetState(EAIState::Wandering);
+			}
 			UE_LOG(LogTemp, Warning, TEXT("주문하러 이동중"))
 			break;
 		}
@@ -128,12 +141,14 @@ void UCustomerFSM::SetState(EAIState NewState)
 		
 	case EAIState::Wandering:
 		{
+			UE_LOG(LogTemp, Error, TEXT("StartWandering"));
 			StartWandering();
 			break;
 		}
 
 	case EAIState::Ordering:
 		{
+			UE_LOG(LogTemp, Warning, TEXT("주문중"))
 			StartOrder();
 			break;
 		}
@@ -166,14 +181,6 @@ void UCustomerFSM::SetState(EAIState NewState)
 	}
 }
 
-void UCustomerFSM::OnOrderCompleted()
-{
-	if (CurrentState == EAIState::Ordering)
-	{
-		SetState(EAIState::WaitingForFood);
-	}
-}
-
 void UCustomerFSM::OnCalledToPickup()
 {
 	if (CurrentState == EAIState::WaitingForFood)
@@ -202,13 +209,26 @@ void UCustomerFSM::EnterStore()
 
 void UCustomerFSM::StartWandering()
 {
-	auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
-
-	auto result = AIController->MoveToLocation(randomPos);
-	if (result == EPathFollowingRequestResult::Type::AlreadyAtGoal || result == EPathFollowingRequestResult::Failed)
-	{
-		GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
-	}
+	// 배회를 시작할 때, MoveToRandomLocation 함수를 "즉시" 한 번 호출하고,
+	// 그 후 3~5초마다 반복해서 호출하도록 타이머를 설정합니다.
+	// 마지막 파라미터 true가 반복, -1.f는 첫 호출 지연 없음(즉시 실행)을 의미합니다.
+	
+	GetWorld()->GetTimerManager().SetTimer(
+		wanderTimerHandle, 
+		this, 
+		&UCustomerFSM::MoveToRandomLocation, 
+		FMath::RandRange(3.0f, 5.0f), 
+		true, 
+		0.0f
+	);
+	
+	// auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
+	//
+	// auto result = AIController->MoveToLocation(randomPos);
+	// if (result == EPathFollowingRequestResult::Type::AlreadyAtGoal || result == EPathFollowingRequestResult::Failed)
+	// {
+	// 	GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
+	// }
 }
 
 bool UCustomerFSM::GetRandomPositionInNavMesh(const FVector& centerPos, const float radius, FVector& dest)
@@ -222,8 +242,24 @@ bool UCustomerFSM::GetRandomPositionInNavMesh(const FVector& centerPos, const fl
 	return bResult;
 }
 
+
+void UCustomerFSM::MoveToRandomLocation()
+{
+	if (GetOwner() && GetRandomPositionInNavMesh(GetOwner()->GetActorLocation(), 500, randomPos))
+	{
+		if (AIController)
+		{
+			AIController->MoveToLocation(randomPos);
+		}
+	}
+}
+
 void UCustomerFSM::StartOrder()
 {
+	AMHGAGameState* gs = Cast<AMHGAGameState>(GetWorld()->GetGameState());
+
+	gs->GetCounter()->ServerRPC_SetCustomer(me);
+	
 	// 랜덤으로 선택할 메뉴의 최소인덱스와 최대인덱스를 정수로 가져온다
 	int32 MinMenuIndex = static_cast<int32>(EBurgerMenu::BigMac);
 	int32 MaxMenuIndex = static_cast<int32>(EBurgerMenu::Shrimp);
@@ -266,8 +302,26 @@ FText UCustomerFSM::GetOrderedMenuAsText()
 
 void UCustomerFSM::FinishOrder()
 {
-	SetState(EAIState::WaitingForFood);
+	if (CurrentState == EAIState::Ordering)
+	{
+		if (manager)
+		{
+		manager->OnCustomerFinished(me);
+		SetState(EAIState::WaitingForFood);
+			UE_LOG(LogTemp, Error, TEXT("주문 완료, 어슬렁"));
+			
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("FinishOrder 실패: CustomerManager 변수가 할당되지 않았습니다!"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("????"));
+	}
 }
+
 
 void UCustomerFSM::CallToPickup()
 {
@@ -281,7 +335,7 @@ void UCustomerFSM::ExitStore()
 {
 }
 
-void UCustomerFSM::MoveToTarget(const AActor* target)
+void UCustomerFSM::MoveToTarget(const ATargetPoint* target)
 {
 	if (target)
 	{
