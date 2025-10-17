@@ -50,6 +50,8 @@ protected:
 	void PutProps();
 	
 public:
-	void InteractProps();
-	void UseProps();
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_InteractProps();
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_UseProps();
 };

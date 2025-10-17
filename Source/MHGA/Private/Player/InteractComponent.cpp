@@ -91,7 +91,8 @@ void UInteractComponent::PutProps()
 	}
 }
 
-void UInteractComponent::InteractProps()
+
+void UInteractComponent::ServerRPC_InteractProps_Implementation()
 {
 	if (!bIsGrabbed)
 		GrabProps();
@@ -99,7 +100,7 @@ void UInteractComponent::InteractProps()
 		PutProps();
 }
 
-void UInteractComponent::UseProps()
+void UInteractComponent::ServerRPC_UseProps_Implementation()
 {
 	if (bIsGrabbed && GrabbedProp)
 	{

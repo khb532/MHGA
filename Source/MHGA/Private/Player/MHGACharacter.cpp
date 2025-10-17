@@ -106,7 +106,7 @@ void AMHGACharacter::LookInput(const FInputActionValue& Value)
 
 void AMHGACharacter::PickInput(const FInputActionValue& Value)
 {
-	InteractComponent->InteractProps();
+	InteractComponent->ServerRPC_InteractProps();
 }
 
 void AMHGACharacter::UseInput(const FInputActionValue& Value)
@@ -117,7 +117,7 @@ void AMHGACharacter::UseInput(const FInputActionValue& Value)
 		WidgetInteraction->PressPointerKey(EKeys::LeftMouseButton);
 
 		//use prop
-		InteractComponent->UseProps();
+		InteractComponent->ServerRPC_UseProps();
 	}
 }
 
