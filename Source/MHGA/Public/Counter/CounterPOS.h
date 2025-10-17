@@ -7,6 +7,7 @@
 #include "BurgerData.h"
 #include "CounterPOS.generated.h"
 
+class ACustomerAI;
 class UCustomerButtonUI;
 class UCounterUI;
 class UWidgetComponent;
@@ -15,6 +16,8 @@ USTRUCT(BlueprintType)
 struct FOrderArray
 {
 	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ACustomerAI* Customer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<EBurgerMenu> Menus;
@@ -41,8 +44,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	UCounterUI* CounterUI;
 
-	//UPROPERTY(EditAnywhere)
-	//AActor* CurrentCustomer;
+	UPROPERTY(EditAnywhere)
+	ACustomerAI* CurrentCustomer;
 
 public:
 	UPROPERTY(EditAnywhere)
@@ -71,8 +74,11 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_CustomerOrderedMenu(int32 CustomerNum);
 	
-	//TODO : 손님 get, set
-
+	//Customer get, set
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_SetCustomer(ACustomerAI* Customer);
+	UFUNCTION()
+	ACustomerAI* GetCustomer() {return CurrentCustomer;}
 
 	void PrintNetLog();
 };
