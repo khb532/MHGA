@@ -20,6 +20,9 @@ public:
 	UFUNCTION()
 	void MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	// 포장 시도
+	void TryWrap();
+	
 	// 레시피 매칭 결과로 햄버거를 스폰하고 포장지를 정리한다.
 	void CompleteWrapping();
 	
@@ -34,12 +37,6 @@ private:
 	// Data테이블의 레시피 매칭
 	// 성공하면 EBurgerMenu BurgerName 반환, 실패하면 EBurgerMenu::WrongBurger
 	EBurgerMenu FindMatchingRecipe(UDataTable* DT, const TArray<FIngredientStack>& WrapperIngr);
-
-	/*
-	 *폐기되었음
-	// 포장 시도
-	// void TryWrap();
-	*/
 	
 	// 현재 재료 목록에 Top/Bottom Bread가 모두 존재하는지 확인한다.
 	bool HasBreadPair() const;

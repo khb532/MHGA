@@ -217,7 +217,7 @@ EBurgerMenu AWrappingPaper::FindMatchingRecipe(UDataTable* DT, const TArray<FIng
 	return EBurgerMenu::WrongBurger;
 }
 
-/*void AWrappingPaper::TryWrap()
+void AWrappingPaper::TryWrap()
 {
 	// TODO: AddIngredient 처리 직후 호출된다; 방금 추가된 재료가 빵일 때만 호출되도록 AddIngredient에서 제어한다.
 	// TODO: HasBreadPair()로 Top/Bottom Bread가 모두 존재하는지 확인한다.
@@ -225,7 +225,7 @@ EBurgerMenu AWrappingPaper::FindMatchingRecipe(UDataTable* DT, const TArray<FIng
 	// TODO: 두 조건이 모두 true일 때 CompleteWrapping()을 호출한다.
 	if (HasBreadPair() && HasExtraIngredient())
 		CompleteWrapping();
-}*/
+}
 
 bool AWrappingPaper::HasBreadPair() const
 {

@@ -22,7 +22,6 @@ public:
 	virtual void OnGrabbed() override;
 	virtual void OnPut() override;
 	virtual void OnUse() override;
-
 	EIngredient GetIngType() { return IngType; }
 
 protected:

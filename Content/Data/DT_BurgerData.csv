@@ -1,0 +1,6 @@
+---,BurgerName,Ingredients
+BigMac,"BigMac","((IngredientId=BottomBread,Quantity=1),(IngredientId=TopBread,Quantity=1),(IngredientId=Patty,Quantity=2),(IngredientId=Lettuce,Quantity=2),(IngredientId=Onion,Quantity=2),(IngredientId=Cheese,Quantity=2),(IngredientId=Sauce,Quantity=2),(IngredientId=Pickle,Quantity=2),(IngredientId=MiddleBread,Quantity=1))"
+BTD,"BTD","((IngredientId=BottomBread,Quantity=1),(IngredientId=TopBread,Quantity=1),(IngredientId=Patty,Quantity=2),(IngredientId=Lettuce,Quantity=1),(IngredientId=Tomato,Quantity=1),(IngredientId=Bacon,Quantity=1),(IngredientId=Sauce,Quantity=1),(IngredientId=Cheese,Quantity=1))"
+QPC,"QPC","((IngredientId=BottomBread,Quantity=1),(IngredientId=TopBread,Quantity=1),(IngredientId=Patty,Quantity=1),(IngredientId=Onion,Quantity=1),(IngredientId=Cheese,Quantity=1),(IngredientId=Pickle,Quantity=1))"
+Shanghai,"Shanghai","((IngredientId=BottomBread,Quantity=1),(IngredientId=TopBread,Quantity=1),(IngredientId=ShanghaiPortion,Quantity=1),(IngredientId=Sauce,Quantity=1),(IngredientId=Lettuce,Quantity=1))"
+Shrimp,"Shrimp","((IngredientId=BottomBread,Quantity=1),(IngredientId=TopBread,Quantity=1),(IngredientId=ShrimpPortion,Quantity=1),(IngredientId=Sauce,Quantity=1),(IngredientId=Lettuce,Quantity=1),(IngredientId=Cheese,Quantity=1))"
