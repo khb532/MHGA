@@ -51,7 +51,7 @@ void UInteractComponent::GrabProps()
 	{
 		if (AWrappingPaper* wp = Cast<AWrappingPaper>(Hit.GetActor()))
 		{
-			wp->CompleteWrapping();
+			wp->TryWrap();
 			return;
 		}
 		
