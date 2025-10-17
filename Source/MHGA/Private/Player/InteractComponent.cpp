@@ -48,7 +48,13 @@ void UInteractComponent::GrabProps()
 
 	if (GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity,
 		ECollisionChannel::ECC_PhysicsBody, Sphere, Params))
-	{		
+	{
+		if (AWrappingPaper* wp = Cast<AWrappingPaper>(Hit.GetActor()))
+		{
+			wp->CompleteWrapping();
+			return;
+		}
+		
 		//PRINTLOG(TEXT("%s"), *Hit.GetActor()->GetActorNameOrLabel());
 		if (Hit.GetComponent()->IsSimulatingPhysics())
 		{
@@ -87,24 +93,6 @@ void UInteractComponent::PutProps()
 
 void UInteractComponent::InteractProps()
 {
-	FVector Start = Owner->GetFirstPersonCameraComponent()->GetComponentLocation();
-	FVector End = Start + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * GrabDistance;
-
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(GrabRadius);
-	FHitResult Hit;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(Owner);
-
-	if (GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity,
-		ECollisionChannel::ECC_PhysicsBody, Sphere, Params))
-	{
-		PRINTLOG(TEXT("%s"), *Hit.GetActor()->GetActorNameOrLabel());
-		if (AWrappingPaper* wp = Cast<AWrappingPaper>(Hit.GetActor()))
-		{
-			PRINTLOG(TEXT("SUCCESS"))
-			wp->CompleteWrapping();
-		}
-	}
 	if (!bIsGrabbed)
 		GrabProps();
 	else

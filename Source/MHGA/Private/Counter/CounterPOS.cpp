@@ -108,6 +108,11 @@ void ACounterPOS::MulticastRPC_CustomerOrderedMenu_Implementation(int32 Customer
 	CounterUI->CustomerOrderedMenuRPC(TargetBtn);
 }
 
+void ACounterPOS::ServerRPC_SetCustomer_Implementation(ACustomerAI* Customer)
+{
+	CurrentCustomer = Customer;
+}
+
 void ACounterPOS::PrintNetLog()
 {
 	//net connection 상태

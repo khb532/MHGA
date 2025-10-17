@@ -122,11 +122,11 @@ void UCounterUI::OnClickMenuBtnRPC()
 
 void UCounterUI::OrderMenuBtnRPC()
 {
-	FString isSercer =  PosActor->HasAuthority() ? TEXT("서버") : TEXT("Client");
-	PRINTLOG(TEXT("%s"), *isSercer);
-	if (OrderList.Num() < 1) return;
+	//FString isSercer =  PosActor->HasAuthority() ? TEXT("서버") : TEXT("Client");
+	//PRINTLOG(TEXT("%s"), *isSercer);
+	if (OrderList.Num() < 1 || PosActor->GetCustomer() == nullptr) return;
 	
-	PosActor->OrderMap.FindOrAdd(PosActor->OrderNum) = {OrderList};
+	PosActor->OrderMap.FindOrAdd(PosActor->OrderNum) = {PosActor->GetCustomer(), OrderList};
 	//PRINTLOG(TEXT("%d, %d"), OrderNum, OrderMap[OrderNum].Menus.Num());
 
 	//주문완료 시 해당 주문 번호 버튼 생성
@@ -159,6 +159,8 @@ void UCounterUI::OrderMenuBtnRPC()
 	}
 	
 	//TODO : AI가 주문을 마친 후 로직 추가
+	
+	PosActor->ServerRPC_SetCustomer(nullptr);
 
 	PosActor->OrderNum++;
 	DeleteListBtn();
