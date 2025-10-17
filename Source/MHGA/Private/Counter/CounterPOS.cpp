@@ -14,7 +14,7 @@ ACounterPOS::ACounterPOS()
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	SetRootComponent(MeshComponent);
-	ConstructorHelpers::FObjectFinder<UStaticMesh> mesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	ConstructorHelpers::FObjectFinder<UStaticMesh> mesh(TEXT("/Script/Engine.StaticMesh'/Game/Asset/Mesh/Furniture_and_Props/SM_Cash_Register/StaticMeshes/SM_Cash_Register.SM_Cash_Register'"));
 	if (mesh.Succeeded())
 		MeshComponent->SetStaticMesh(mesh.Object);
 	
@@ -24,8 +24,9 @@ ACounterPOS::ACounterPOS()
 	if (cu.Succeeded())
 		WidgetComponent->SetWidgetClass(cu.Class);
 	
-	WidgetComponent->SetRelativeLocation(FVector(50.0f, 0.0f, 110.0f));
-	WidgetComponent->SetRelativeScale3D(FVector(0.1f));
+	WidgetComponent->SetRelativeLocation(FVector(0,-7.432827f,28.0f));
+	WidgetComponent->SetRelativeRotation(FRotator(38.3f,-90.0f,0));
+	WidgetComponent->SetRelativeScale3D(FVector(1, 0.0225f,0.0325f));
 	WidgetComponent->SetDrawSize(FVector2D(1920, 1080));
 
 	bReplicates = true;
