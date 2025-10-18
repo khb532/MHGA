@@ -8,6 +8,7 @@
 #include "CustomerFSM.generated.h"
 
 class ATargetPoint;
+class APickupZone;
 
 UENUM(BlueprintType)
 enum class EAIState : uint8
@@ -58,19 +59,19 @@ public:
 	FString DesiredMenu;	// 손님이 주문한 메뉴
 
 	UPROPERTY(EditAnywhere, Category = "AI State")
-	float MaxWaitTime = 30.f;		// 최대 대기 시간
+	float maxWaitTime = 30.f;		// 최대 대기 시간
 	
-	float StateTimer;		// 대기시간 측정 타이머
+	float waitingTimer;		// 대기시간 측정 타이머
 
 	// == 위치정보 ==
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	class ATargetPoint* OrderTarget;	// 주문 위치
+	class ATargetPoint* orderTarget;	// 주문 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	class ATargetPoint* LineTarget;		// 대기열 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
-	class ATargetPoint* PickupTarget;	// 음식 수령 위치
+	class ATargetPoint* pickupTarget;	// 음식 수령 위치
 
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
 	class ATargetPoint* ExitTarget;		// 퇴장 위치
@@ -81,6 +82,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="AI Navigation")
 	TArray<ATargetPoint*> targetPoints;
+	
+	UPROPERTY(EditAnywhere)
+	APickupZone* MyPickupZone;
 	
 	UFUNCTION()
 	void EnterStore();
@@ -111,6 +115,9 @@ public:
 	void CallToPickup();
 	UFUNCTION()
 	void WaitingForPickup();
+
+public:
+	void CheckAndTakeFood();
 
 	UFUNCTION()
 	void ExitStore();

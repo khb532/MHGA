@@ -2,7 +2,7 @@
 
 
 #include "AI/CustomerManager.h"
-
+#include "Counter/PickupZone.h" // 여기에 include 추가
 #include "AI/CustomerAI.h"
 #include "AI/CustomerFSM.h"
 
@@ -42,7 +42,10 @@ void ACustomerManager::SpawnCustomer()
 	// 스폰 시간 랜덤으로 다시 지정
 	float spawnTime = FMath::RandRange(minTime, maxTime);
 	// 스폰 타이머 재설정
-	GetWorld()->GetTimerManager().SetTimer(spawnTimer, this, &ACustomerManager::SpawnCustomer, spawnTime);
+	if (bRespawn)
+	{
+		GetWorld()->GetTimerManager().SetTimer(spawnTimer, this, &ACustomerManager::SpawnCustomer, spawnTime);
+	}
 }
 
 ATargetPoint* ACustomerManager::RequestWaitingPoint(ACustomerAI* customer)
@@ -65,6 +68,33 @@ ATargetPoint* ACustomerManager::RequestWaitingPoint(ACustomerAI* customer)
 	}
 }
 
+ATargetPoint* ACustomerManager::RequestPickupPoint()
+{
+	return pickupPoints[0];
+	// // 대기열에 빈 자리가 있는지 확인
+	// int32 emptySpotIdx = waitingCustomers.Find(nullptr);
+	//
+	// // 빈자리가 있고, 대기열이 비어있을 때만 신규 손님을 들여보낸다
+	// if (emptySpotIdx != INDEX_NONE && wanderingCustomers.Num() == 0)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("줄도 비어있고 대기자도 없어서 새 손님을 %d번 자리에 배정합니다"), emptySpotIdx);
+	// 	waitingCustomers[emptySpotIdx] = customer;
+	// 	return waitingPoints[emptySpotIdx];
+	// }
+	// else
+	// {
+	// 	// 빈자리가 없거나, 빈자리가 있어도 먼저 온 대기자가 있다면 신규 손님을 대기자 명단에 추가하고 배회시킨다
+	// 	wanderingCustomers.Add(customer);
+	// 	return nullptr;
+	// }
+}
+
+ATargetPoint* ACustomerManager::RequestExitPoint()
+{
+	return spawnPoint;
+}
+
+
 void ACustomerManager::OnCustomerFinished(ACustomerAI* customer)
 {
 	// 배열에서 떠나는 손님 찾기
@@ -72,6 +102,7 @@ void ACustomerManager::OnCustomerFinished(ACustomerAI* customer)
 	{
 		if (waitingCustomers[i] == customer)
 		{
+			pickupCustomers.Add(customer);
 			// 손님 배열 지우기
 			waitingCustomers[i] = nullptr;
 			break;
@@ -136,3 +167,32 @@ void ACustomerManager::CallNextCustomerFromWandering()
 	}
 }
 
+void ACustomerManager::OnFoodPlacedInZone(APickupZone* Zone)
+{
+	// 대기자 명단에 손님이 있는지 확인합니다.
+	if (pickupCustomers.Num() > 0)
+	{
+		// 가장 오래 기다린 첫 번째 손님을 데려옵니다. (선입선출)
+		ACustomerAI* NextCustomer = pickupCustomers[0];
+		pickupCustomers.RemoveAt(0); // 대기자 명단에서 제거
+
+		UE_LOG(LogTemp, Log, TEXT("대기 중인 손님 %s를 픽업 존으로 보냅니다."), *NextCustomer->GetName());
+
+		// 손님 FSM에게 픽업 존으로 가라고 명령합니다.
+		if (IsValid(NextCustomer) && IsValid(NextCustomer->fsm))
+		{
+		UE_LOG(LogTemp, Log, TEXT("근데 성공함"));
+			NextCustomer->fsm->CallToPickup();
+			
+		}
+		else
+		{
+		UE_LOG(LogTemp, Log, TEXT("근데 실패함"));
+			
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("음식은 준비되었지만, 호출할 대기 손님이 없습니다."));
+	}
+}

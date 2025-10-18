@@ -58,8 +58,13 @@ void AHamburger::PrintLog()
 }
 
 
+
 void AHamburger::SetName(FString Name)
 {
 	BurgerName = Name;
 }
 
+FString AHamburger::GetBurgerName()
+{
+	return BurgerName;
+}

@@ -39,5 +39,9 @@ public:
 	bool bShowLog = true;
 private:
 	FString BurgerName;
+
+	// 황규환이 추가함 햄버거 이름 받아오기용 함수
+public:
+	FString GetBurgerName();
 	
 };
