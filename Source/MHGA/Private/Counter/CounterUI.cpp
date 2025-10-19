@@ -146,7 +146,8 @@ void UCounterUI::OrderMenuBtnRPC()
 	if (PosActor->HasAuthority())
 	{
 		//영수증 출력
-		AReceiptActor* NewReceipt = GetWorld()->SpawnActor<AReceiptActor>(AReceiptActor::StaticClass());
+		AReceiptActor* NewReceipt = GetWorld()->SpawnActor<AReceiptActor>(AReceiptActor::StaticClass(), PosActor->GetActorLocation()
+			+ PosActor->GetActorForwardVector()* 100, FRotator(0, 180, 0));
 		if (NewReceipt)
 		{
 			TArray<FString> MenuStrings;
