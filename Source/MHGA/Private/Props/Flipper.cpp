@@ -72,9 +72,20 @@ void AFlipper::OnUse()
 			if (GrabInterface == nullptr)
 				return;
 
-			FRotator Rot = GrabCharacter->GetFirstPersonCameraComponent()->GetComponentRotation();
-			Rot.Roll += 180.f;
-			Hit.GetActor()->SetActorRotation(Rot);
+			
+			// 플레이어의 시선 기준 회전 행렬 생성
+			FRotationMatrix CamMatrix(GrabCharacter->GetFirstPersonCameraComponent()->GetComponentRotation());
+			// 시선의 Right 벡터(플레이어 기준 좌우 축)
+			FVector RightVector = CamMatrix.GetScaledAxis(EAxis::Y);
+
+			// Hit된 액터의 현재 회전
+			FQuat CurrentQuat = Hit.GetActor()->GetActorQuat();
+			// RightVector 축으로 180도 회전 쿼터니언 생성
+			FQuat FlipQuat = FQuat(RightVector, FMath::DegreesToRadians(180.f));
+			// 최종 회전 = 기존 회전 * 반전 회전
+			FQuat NewQuat = FlipQuat * CurrentQuat;
+
+			Hit.GetActor()->SetActorRotation(NewQuat);
 		}
 	}
 	

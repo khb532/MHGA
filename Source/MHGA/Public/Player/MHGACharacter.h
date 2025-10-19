@@ -40,6 +40,8 @@ protected:
 	UInputAction* IA_Pick;
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* IA_Use;
+	UPROPERTY(EditAnywhere, Category ="Input")
+	UInputAction* IA_Crouch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	UCameraComponent* FPSCamComponent;
@@ -58,6 +60,7 @@ protected:
 	void PickInput(const FInputActionValue& Value);
 	void UseInput(const FInputActionValue& Value);
 	void UseInputRelease(const FInputActionValue& Value);
+	void CrouchInput(const FInputActionValue& Value);
 
 
 public:

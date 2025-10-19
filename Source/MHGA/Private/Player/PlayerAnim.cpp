@@ -26,5 +26,6 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		Dir = FVector::DotProduct(OwnerPlayer->GetVelocity(), OwnerPlayer->GetActorRightVector())/OwnerPlayer->GetCharacterMovement()->GetMaxSpeed();
 
 		CameraRotX = -OwnerPlayer->GetBaseAimRotation().Pitch;
+		bIsCrouch = OwnerPlayer->GetCharacterMovement()->IsCrouching();
 	}
 }

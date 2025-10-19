@@ -27,6 +27,8 @@ public:
 	float Dir = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float CameraRotX = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bIsCrouch = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=PlayerAnim)
 	AMHGACharacter* OwnerPlayer;

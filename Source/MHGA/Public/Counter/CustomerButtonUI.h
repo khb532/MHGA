@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CustomerButtonUI.generated.h"
 
+class ACustomerAI;
 class UCounterUI;
 class UTextBlock;
 class UButton;
@@ -21,8 +22,8 @@ private:
 	UPROPERTY()
 	UCounterUI* CounterUI;
 
-	//UPROPERTY() TODO: 손님
-	//AActor* Customer;
+	UPROPERTY()
+	ACustomerAI* Customer;
 	
 	UPROPERTY()
 	int32 Num;
@@ -42,8 +43,8 @@ protected:
 	void OnClickedBtn();
 	
 public:
-	//손님 추가해야됨
 	void Init(TArray<EBurgerMenu> InMenu, int32 InNum, UCounterUI* InOwner);
 	int32 GetNum();
 	TArray<EBurgerMenu>& GetMenuInfo();
+	ACustomerAI* GetCustomer() {return Customer;}
 };

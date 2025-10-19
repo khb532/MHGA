@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "MHGA.h"
 #include "Components/WidgetInteractionComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Player/InteractComponent.h"
 #include "Player/PlayerAnim.h"
 
@@ -61,7 +62,12 @@ AMHGACharacter::AMHGACharacter()
 	ConstructorHelpers::FObjectFinder<UInputAction> use(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Use.IA_Use'"));
 	if (use.Succeeded())
 		IA_Use = use.Object;
+	ConstructorHelpers::FObjectFinder<UInputAction> crouch(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Crouch.IA_Crouch'"));
+	if (crouch.Succeeded())
+		IA_Crouch = crouch.Object;
 
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	bReplicates = true;
 }
 
@@ -81,6 +87,7 @@ void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(IA_Pick, ETriggerEvent::Started, this, &AMHGACharacter::PickInput);
 		EnhancedInputComponent->BindAction(IA_Use, ETriggerEvent::Started, this, &AMHGACharacter::UseInput);
 		EnhancedInputComponent->BindAction(IA_Use, ETriggerEvent::Completed, this, &AMHGACharacter::UseInputRelease);
+		EnhancedInputComponent->BindAction(IA_Crouch, ETriggerEvent::Started, this, &AMHGACharacter::CrouchInput);
 	}
 }
 
@@ -125,4 +132,15 @@ void AMHGACharacter::UseInputRelease(const FInputActionValue& Value)
 {
 	if (IsLocallyControlled())
 		WidgetInteraction->ReleasePointerKey(EKeys::LeftMouseButton);
+}
+
+void AMHGACharacter::CrouchInput(const FInputActionValue& Value)
+{
+	if (IsLocallyControlled())
+	{
+		if (!GetCharacterMovement()->IsCrouching())
+			Crouch();
+		else
+			UnCrouch();
+	}
 }
