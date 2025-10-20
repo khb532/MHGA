@@ -83,8 +83,8 @@ void UInteractComponent::MulticastRPC_GrabProps_Implementation(FHitResult Hit)
 	Hit.GetComponent()->SetCollisionProfileName(TEXT("Grabbed"));
 	HoldDistance = FVector::Dist(Owner->GetFirstPersonCameraComponent()->GetComponentLocation(), Hit.GetComponent()->GetComponentLocation());
 	HoldDistance = FMath::Clamp(HoldDistance, 50, 200);
-	Owner->SetHoldPos(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);
-	Hit.GetActor()->AttachToComponent(Owner->GetHoldingScene(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	Hit.GetActor()->AttachToComponent(Owner->GetFirstPersonCameraComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	GrabInterface->SetLocation(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);
 	
 	bIsGrabbed = true;
 	GrabbedProp = GrabInterface;

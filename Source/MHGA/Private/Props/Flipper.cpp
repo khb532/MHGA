@@ -93,4 +93,13 @@ void AFlipper::OnUse()
 	PRINTLOG(TEXT("USE!"));
 }
 
+void AFlipper::SetLocation(FVector Loc)
+{
+	FVector Pos = GrabCharacter->GetFirstPersonCameraComponent()->GetComponentLocation();
+	FVector Forward = GrabCharacter->GetFirstPersonCameraComponent()->GetForwardVector();
+	FVector Right = GrabCharacter->GetFirstPersonCameraComponent()->GetRightVector();
+	FVector Up = GrabCharacter->GetFirstPersonCameraComponent()->GetUpVector();
+	SetActorLocation(Pos + Forward * 50 + Right * 30 + -Up*20);
+}
+
 
