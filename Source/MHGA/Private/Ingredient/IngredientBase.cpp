@@ -63,3 +63,8 @@ void AIngredientBase::OnUse()
 	PRINTLOG(TEXT("USE!"));
 }
 
+void AIngredientBase::SetLocation(FVector Loc)
+{
+	SetActorLocation(Loc);
+}
+

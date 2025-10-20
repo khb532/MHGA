@@ -78,6 +78,11 @@ void AReceiptActor::OnUpdateCanvas(UCanvas* Canvas, int32 Width, int32 Height)
 	}
 }
 
+void AReceiptActor::SetLocation(FVector Loc)
+{
+	SetActorLocation(Loc);
+}
+
 void AReceiptActor::MulticastRPC_Init_Implementation(int32 InOrderNum, const TArray<FString>& InMenus)
 {
 	OrderNum = InOrderNum;

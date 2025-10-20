@@ -44,6 +44,11 @@ void AHamburger::OnUse()
 	return;
 }
 
+void AHamburger::SetLocation(FVector Loc)
+{
+	SetActorLocation(Loc);
+}
+
 void AHamburger::PrintLog()
 {
 	if (!BurgerName.IsEmpty())

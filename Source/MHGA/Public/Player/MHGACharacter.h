@@ -51,9 +51,6 @@ protected:
 	UInteractComponent* InteractComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UWidgetInteractionComponent* WidgetInteraction; //3d widget interact
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	USceneComponent* HoldingScene;
-
 
 protected:
 	void MoveInput(const FInputActionValue& Value);
@@ -63,12 +60,9 @@ protected:
 	void UseInputRelease(const FInputActionValue& Value);
 	void CrouchInput(const FInputActionValue& Value);
 
-
 public:
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return GetMesh(); }
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FPSCamComponent; }
 	UInteractComponent* GetInteractComponent() const {return InteractComponent;}
-	USceneComponent* GetHoldingScene() const { return HoldingScene; }
-	void SetHoldPos(FVector Loc);
 };
 

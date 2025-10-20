@@ -52,4 +52,5 @@ public:
 	virtual void OnGrabbed(AMHGACharacter* Player) override {}
 	virtual void OnPut() override {}
 	virtual void OnUse() override{}
+	virtual void SetLocation(FVector Loc) override;
 };
