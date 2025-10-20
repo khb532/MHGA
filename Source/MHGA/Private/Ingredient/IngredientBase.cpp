@@ -16,8 +16,6 @@ AIngredientBase::AIngredientBase()
 	SetRootComponent(Mesh);
 	Mesh->SetSimulatePhysics(true);
 	Mesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-
-	Mesh->SetSimulatePhysics(true);
 	Mesh->SetEnableGravity(true);
 
 	bReplicates = true;
@@ -46,7 +44,7 @@ void AIngredientBase::OnGrabbed(AMHGACharacter* Player)
 	if (GrabCharacter != Player && GrabCharacter != nullptr)
 	{
 		PRINTINFO();
-		GrabCharacter->GetInteractComponent()->ServerRPC_PutProps();
+		GrabCharacter->GetInteractComponent()->PutProps();
 	}
 
 	GrabCharacter = Player;

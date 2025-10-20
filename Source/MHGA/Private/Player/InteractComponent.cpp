@@ -6,11 +6,11 @@
 #include "Camera/CameraComponent.h"
 #include "GrabableProps.h"
 #include "WrappingPaper.h"
+#include "ProfilingDebugging/CookStats.h"
 
 UInteractComponent::UInteractComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("HandleComponent"));
 }
 
 void UInteractComponent::BeginPlay()
@@ -24,18 +24,6 @@ void UInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                        FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
- 	
-	//if (Owner->HasAuthority() == false) return;
-
-	if (PhysicsHandle->GrabbedComponent && bIsGrabbed)
-	{
-		FVector HoldLocation = Owner->GetFirstPersonCameraComponent()->GetComponentLocation() +
-							   Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance;
-
-		FRotator HoldRotation = Owner->GetFirstPersonCameraComponent()->GetComponentRotation();
-		
-		PhysicsHandle->SetTargetLocationAndRotation(HoldLocation, HoldRotation);
-	}
 }
 
 void UInteractComponent::GrabProps()
@@ -58,44 +46,52 @@ void UInteractComponent::GrabProps()
 		}
 		
 		//PRINTLOG(TEXT("%s"), *Hit.GetActor()->GetActorNameOrLabel());
-		if (Hit.GetComponent()->IsSimulatingPhysics())
-		{
-			IGrabableProps* GrabInterface = Cast<IGrabableProps>(Hit.GetActor());
-			if (GrabInterface == nullptr)
-				return;
-
-			HoldDistance = FVector::Dist(Start, Hit.GetComponent()->GetComponentLocation());
-			GrabInterface->OnGrabbed(Owner);
-			
-			UPrimitiveComponent* HitComp = Hit.GetComponent();
-			HitComp->WakeAllRigidBodies();
-			PhysicsHandle->GrabComponentAtLocationWithRotation(
-				HitComp,
-				NAME_None,
-				Hit.ImpactPoint,
-				Owner->GetFirstPersonCameraComponent()->GetComponentRotation()
-			);
-
-			bIsGrabbed = true;
-			GrabbedProp = GrabInterface;
-		}
+		MulticastRPC_GrabProps(Hit);
 	}
-	
 }
 
 void UInteractComponent::PutProps()
-{	
-	if (PhysicsHandle->GrabbedComponent)
+{
+	if (GrabbedProp)
 	{
 		GrabbedProp->OnPut();
-		
-		PhysicsHandle->ReleaseComponent();
+
+		AActor* P = Cast<AActor>(GrabbedProp);
+		if (UPrimitiveComponent* Root = Cast<UPrimitiveComponent>(P->GetRootComponent()))
+		{
+			PRINTINFO();
+			Root->SetSimulatePhysics(true);
+			Root->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+			P->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		}
+
 		bIsGrabbed = false;
 		GrabbedProp = nullptr;
 	}
 }
 
-void UInteractComponent::ServerRPC_PutProps_Implementation()
+
+void UInteractComponent::MulticastRPC_GrabProps_Implementation(FHitResult Hit)
+{
+	IGrabableProps* GrabInterface = Cast<IGrabableProps>(Hit.GetActor());
+	if (GrabInterface == nullptr)
+		return;
+
+	GrabInterface->OnGrabbed(Owner);
+
+	Hit.GetComponent()->SetSimulatePhysics(false);
+	Hit.GetComponent()->SetCollisionProfileName(TEXT("Grabbed"));
+	HoldDistance = FVector::Dist(Owner->GetFirstPersonCameraComponent()->GetComponentLocation(), Hit.GetComponent()->GetComponentLocation());
+	HoldDistance = FMath::Clamp(HoldDistance, 50, 200);
+	Owner->SetHoldPos(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);
+	Hit.GetActor()->AttachToComponent(Owner->GetHoldingScene(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	
+	bIsGrabbed = true;
+	GrabbedProp = GrabInterface;
+}
+
+
+void UInteractComponent::MulticastRPC_PutProps_Implementation()
 {
 	PutProps();
 }
@@ -105,7 +101,7 @@ void UInteractComponent::ServerRPC_InteractProps_Implementation()
 	if (!bIsGrabbed)
 		GrabProps();
 	else
-		PutProps();
+		MulticastRPC_PutProps();
 }
 
 void UInteractComponent::ServerRPC_UseProps_Implementation()

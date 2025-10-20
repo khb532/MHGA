@@ -46,8 +46,9 @@ AMHGACharacter::AMHGACharacter()
 	WidgetInteraction->bShowDebug = true;
 	WidgetInteraction->DebugLineThickness = 0.1f;
 
-
-
+	HoldingScene = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingScene"));
+	HoldingScene->SetupAttachment(FPSCamComponent);
+	
 	
 	//////////////////////////////////Input///////////////////////////////
 	ConstructorHelpers::FObjectFinder<UInputAction> move(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Move.IA_Move'"));
@@ -113,7 +114,8 @@ void AMHGACharacter::LookInput(const FInputActionValue& Value)
 
 void AMHGACharacter::PickInput(const FInputActionValue& Value)
 {
-	InteractComponent->ServerRPC_InteractProps();
+	if (IsLocallyControlled())
+		InteractComponent->ServerRPC_InteractProps();
 }
 
 void AMHGACharacter::UseInput(const FInputActionValue& Value)
@@ -143,4 +145,9 @@ void AMHGACharacter::CrouchInput(const FInputActionValue& Value)
 		else
 			UnCrouch();
 	}
+}
+
+void AMHGACharacter::SetHoldPos(FVector Loc)
+{
+	HoldingScene->SetWorldLocation(Loc);
 }

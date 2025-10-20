@@ -36,7 +36,7 @@ void AFlipper::OnGrabbed(AMHGACharacter* Player)
 	if (GrabCharacter != Player && GrabCharacter != nullptr)
 	{
 		PRINTINFO();
-		GrabCharacter->GetInteractComponent()->ServerRPC_PutProps();
+		GrabCharacter->GetInteractComponent()->PutProps();
 	}
 
 	GrabCharacter = Player;

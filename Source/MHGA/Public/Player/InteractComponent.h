@@ -31,8 +31,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GrabC")
 	AMHGACharacter* Owner;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Grab")
-	UPhysicsHandleComponent* PhysicsHandle;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grab")
 	float GrabDistance = 200.f; // 집을 수 있는 최대 거리
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grab")
@@ -47,14 +45,16 @@ protected:
 
 protected:
 	void GrabProps();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_GrabProps(FHitResult Hit);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_PutProps();
+
+public:
 	void PutProps();
 	
-public:
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_InteractProps();
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_UseProps();
-
-	UFUNCTION(Server, Reliable)
-	void ServerRPC_PutProps();
 };

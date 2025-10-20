@@ -51,7 +51,8 @@ protected:
 	UInteractComponent* InteractComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UWidgetInteractionComponent* WidgetInteraction; //3d widget interact
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	USceneComponent* HoldingScene;
 
 
 protected:
@@ -67,6 +68,7 @@ public:
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return GetMesh(); }
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FPSCamComponent; }
 	UInteractComponent* GetInteractComponent() const {return InteractComponent;}
-
+	USceneComponent* GetHoldingScene() const { return HoldingScene; }
+	void SetHoldPos(FVector Loc);
 };
 
