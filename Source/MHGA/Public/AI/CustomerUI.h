@@ -10,13 +10,13 @@
 /**
  * 
  */
-class ACustomerAI;
 
 UCLASS()
 class MHGA_API UCustomerUI : public UUserWidget
 {
 	GENERATED_BODY()
 
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class ACustomerAI* ownerAI;

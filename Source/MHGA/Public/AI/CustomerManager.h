@@ -8,9 +8,6 @@
 #include "CustomerManager.generated.h"
 
 // ADDED: APickupZone 이라는 클래스가 있다고 컴파일러에게 미리 알려줍니다.
-class APickupZone; 
-class ACustomerAI;
-class ATargetPoint;
 
 UCLASS()
 class MHGA_API ACustomerManager : public AActor
@@ -53,7 +50,7 @@ public:
 	
 	// 손님 스폰 포인트
 	UPROPERTY(EditAnywhere, Category = "Spawn")
-	ATargetPoint* spawnPoint;
+	class ATargetPoint* spawnPoint;
 	
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	TSubclassOf<class ACustomerAI> spawnFactory;
@@ -77,11 +74,11 @@ public:
 	TArray<ACustomerAI*> wanderingCustomers;
 	
 	UFUNCTION()
-	ATargetPoint* RequestWaitingPoint(ACustomerAI* customer);
+	class ATargetPoint* RequestWaitingPoint(ACustomerAI* customer);
 	UFUNCTION()
-	ATargetPoint* RequestPickupPoint();
+	class ATargetPoint* RequestPickupPoint();
 	UFUNCTION()
-	ATargetPoint* RequestExitPoint();
+	class ATargetPoint* RequestExitPoint();
 
 	UFUNCTION()
 	void OnCustomerFinished(ACustomerAI* customer);
@@ -90,7 +87,7 @@ public:
 	TArray<ACustomerAI*> pickupCustomers;
 
 	/** [자동 보고] 픽업 존에서 음식이 준비되었다고 보고받았을 때 호출됩니다. */
-	void OnFoodPlacedInZone(APickupZone* Zone);
+	void OnFoodPlacedInZone(class APickupZone* Zone);
 	
 	UFUNCTION()
 	void UpdateWaitingPosition();

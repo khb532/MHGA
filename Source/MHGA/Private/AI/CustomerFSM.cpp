@@ -80,7 +80,8 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 		waitingTimer += DeltaTime;
 		if (waitingTimer > maxWaitTime)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("너무 오래걸려서 돌아갔습니다"))
+			UE_LOG(LogTemp, Warning, TEXT("너무 오래걸려서 돌아갔습니다"));
+			me->ShowReputationText(false);
 			SetState(EAIState::Exit);
 		}
 	}
@@ -141,7 +142,6 @@ void UCustomerFSM::SetState(EAIState NewState)
 		
 	case EAIState::Wandering:
 		{
-			UE_LOG(LogTemp, Error, TEXT("StartWandering"));
 			StartWandering();
 			break;
 		}
@@ -165,7 +165,7 @@ void UCustomerFSM::SetState(EAIState NewState)
 			if (pickupTarget)
 			{
 				MoveToTarget(pickupTarget);
-				UE_LOG(LogTemp, Log, TEXT("픽업하러 이동중임"));
+				UE_LOG(LogTemp, Log, TEXT("픽업하러 이동중"));
 			}
 			break;
 		}
@@ -330,7 +330,7 @@ void UCustomerFSM::FinishOrder()
 			manager->OnCustomerFinished(me);
 			me->HideOrderUI();
 			SetState(EAIState::WaitingForFood);
-			UE_LOG(LogTemp, Error, TEXT("주문 완료, 어슬렁"));
+			UE_LOG(LogTemp, Error, TEXT("주문 완료"));
 		}
 		else
 		{
@@ -354,7 +354,6 @@ void UCustomerFSM::CallToPickup()
 	else
 	{
 		UE_LOG(LogTemp, Log, TEXT("픽업하러 못감"));
-		
 	}
 }
 
@@ -393,12 +392,14 @@ void UCustomerFSM::CheckAndTakeFood()
 			// --- 3. 두 FString을 비교 ---
 			if (OrderedMenuName == TakenBurgerName)
 			{
+				me->ShowReputationText(true);
 				UE_LOG(LogTemp, Log, TEXT("주문한 메뉴와 동일! 만족!"));
 				// TODO: 평점 올리는 로직
 				SetState(EAIState::Exit);
 			}
 			else
 			{
+				me->ShowReputationText(false);
 				UE_LOG(LogTemp, Warning, TEXT("다른 메뉴를 받음! 주문: %s, 받은 것: %s"), *OrderedMenuName, *TakenBurgerName);
 				// TODO: 평점 내리는 로직
 				SetState(EAIState::Exit);

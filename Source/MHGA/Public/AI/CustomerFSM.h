@@ -7,9 +7,6 @@
 #include "Components/ActorComponent.h"
 #include "CustomerFSM.generated.h"
 
-class ATargetPoint;
-class APickupZone;
-
 UENUM(BlueprintType)
 enum class EAIState : uint8
 {
@@ -84,7 +81,7 @@ public:
 	TArray<ATargetPoint*> targetPoints;
 	
 	UPROPERTY(EditAnywhere)
-	APickupZone* MyPickupZone;
+	class APickupZone* MyPickupZone;
 	
 	UFUNCTION()
 	void EnterStore();

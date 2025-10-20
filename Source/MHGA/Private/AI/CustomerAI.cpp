@@ -7,6 +7,7 @@
 #include "public/AI/CustomerUI.h"
 #include "AI/CustomerFSM.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 #include "DSP/AudioDebuggingUtilities.h"
 
 // Sets default values
@@ -16,7 +17,14 @@ ACustomerAI::ACustomerAI()
 	PrimaryActorTick.bCanEverTick = true;
 
 	fsm = CreateDefaultSubobject<UCustomerFSM>(TEXT("FSM"));
-
+	
+	judgeWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("JudgeWidget"));
+	judgeWidget->SetupAttachment(GetRootComponent());
+	// 항상 화면을 향하게
+	judgeWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	judgeWidget->SetDrawSize(FVector2D(150, 50));
+	judgeWidget->SetVisibility(false);
+	
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 }
@@ -77,5 +85,45 @@ void ACustomerAI::HideOrderUI()
 	if (orderWidgetInst && orderWidgetInst->IsInViewport())
 	{
 		orderWidgetInst->RemoveFromParent();
+	}
+}
+
+void ACustomerAI::ShowReputationText(bool bIsPositive)
+{
+	if (!judgeWidget) return;
+
+	// 위젯 컴포넌트를 보이게 합니다.
+	judgeWidget->SetVisibility(true);
+
+	// 컴포넌트가 가지고 있는 실제 위젯 인스턴스를 가져옵니다.
+	UUserWidget* widgetInst = judgeWidget->GetUserWidgetObject();
+	if (widgetInst)
+	{
+		// 위젯 블루프린트에 만들어 둔 'ShowFeedbackText' 이벤트를 이름으로 찾아 호출합니다.
+		UFunction* function = widgetInst->FindFunction(FName("ShowFeedbackText"));
+		if (function)
+		{
+			// 함수에 전달할 파라미터를 준비합니다.
+			struct FFeedbackParams
+			{
+				FText Message;
+				FLinearColor Color;
+			};
+
+			FFeedbackParams Params;
+			if (bIsPositive)
+			{
+				Params.Message = NSLOCTEXT("Feedback", "Good", ":)");
+				Params.Color = FLinearColor::White;
+			}
+			else
+			{
+				Params.Message = NSLOCTEXT("Feedback", "Bad", ":(");
+				Params.Color = FLinearColor::Red;
+			}
+
+			// 함수를 실행합니다.
+			widgetInst->ProcessEvent(function, &Params);
+		}
 	}
 }

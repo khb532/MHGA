@@ -38,8 +38,6 @@ void ACustomerManager::SpawnCustomer()
 	// 현재 인원수가 최대 인원수보다 적은지 확인
 	if (CurrentSpawnedCustomers >= MaxSpawnedCustomers)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("최대 손님 인원수(%d명)에 도달하여 더 이상 스폰하지 않습니다."), MaxSpawnedCustomers);
-        
 		// 스폰 타이머를 다시 설정하여 주기적으로 재확인하도록 할 수 있습니다.
 		float spawnTime = FMath::RandRange(minTime, maxTime);
 		GetWorld()->GetTimerManager().SetTimer(spawnTimer, this, &ACustomerManager::SpawnCustomer, spawnTime);
@@ -181,7 +179,7 @@ void ACustomerManager::CallNextCustomerFromWandering()
 	}
 }
 
-void ACustomerManager::OnFoodPlacedInZone(APickupZone* Zone)
+void ACustomerManager::OnFoodPlacedInZone(class APickupZone* Zone)
 {
 	// 대기자 명단에 손님이 있는지 확인합니다.
 	if (pickupCustomers.Num() > 0)
@@ -195,13 +193,13 @@ void ACustomerManager::OnFoodPlacedInZone(APickupZone* Zone)
 		// 손님 FSM에게 픽업 존으로 가라고 명령합니다.
 		if (IsValid(NextCustomer) && IsValid(NextCustomer->fsm))
 		{
-		UE_LOG(LogTemp, Log, TEXT("근데 성공함"));
+		UE_LOG(LogTemp, Log, TEXT("손님이 픽업존으로 가고있습니다"));
 			NextCustomer->fsm->CallToPickup();
 			
 		}
 		else
 		{
-		UE_LOG(LogTemp, Log, TEXT("근데 실패함"));
+		UE_LOG(LogTemp, Log, TEXT("픽업존 못감"));
 			
 		}
 	}
