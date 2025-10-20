@@ -7,6 +7,7 @@
 #include "InteractComponent.generated.h"
 
 
+class AIngredientBase;
 class AMHGACharacter;
 class UPhysicsHandleComponent;
 class IGrabableProps;
@@ -47,6 +48,8 @@ protected:
 	void GrabProps();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_GrabProps(FHitResult Hit);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_InteractIngContainer(AIngredientBase* Ingredient);
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_PutProps();
 

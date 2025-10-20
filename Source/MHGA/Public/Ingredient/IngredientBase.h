@@ -26,6 +26,7 @@ public:
 	virtual void SetLocation(FVector Loc) override;
 	EIngredient GetIngType() { return IngType; }
 
+	UStaticMeshComponent* GetMeshComp() {return Mesh;}
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;

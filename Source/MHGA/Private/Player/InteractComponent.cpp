@@ -6,7 +6,9 @@
 #include "Camera/CameraComponent.h"
 #include "GrabableProps.h"
 #include "WrappingPaper.h"
+#include "Ingredient/IngredientBase.h"
 #include "ProfilingDebugging/CookStats.h"
+#include "Props/IngContainer.h"
 
 UInteractComponent::UInteractComponent()
 {
@@ -44,9 +46,50 @@ void UInteractComponent::GrabProps()
 			wp->TryWrap();
 			return;
 		}
-		
+
 		//PRINTLOG(TEXT("%s"), *Hit.GetActor()->GetActorNameOrLabel());
-		MulticastRPC_GrabProps(Hit);
+		if (Cast<IGrabableProps>(Hit.GetActor()))
+			MulticastRPC_GrabProps(Hit);
+		else if (AIngContainer* Container = Cast<AIngContainer>(Hit.GetActor()))
+		{
+			AIngredientBase* Ing = Container->GetIngredient();
+			MulticastRPC_InteractIngContainer(Ing);
+		}
+	}
+}
+
+void UInteractComponent::MulticastRPC_GrabProps_Implementation(FHitResult Hit)
+{
+	IGrabableProps* GrabInterface = Cast<IGrabableProps>(Hit.GetActor());
+	GrabInterface->OnGrabbed(Owner);
+
+	Hit.GetComponent()->SetSimulatePhysics(false);
+	Hit.GetComponent()->SetCollisionProfileName(TEXT("Grabbed"));
+	HoldDistance = FVector::Dist(Owner->GetFirstPersonCameraComponent()->GetComponentLocation(), Hit.GetActor()->GetActorLocation());
+	HoldDistance = FMath::Clamp(HoldDistance, 50, 200);
+	Cast<AActor>(GrabInterface)->AttachToComponent(Owner->GetFirstPersonCameraComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	GrabInterface->SetLocation(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);
+
+	bIsGrabbed = true;
+	GrabbedProp = GrabInterface;
+}
+
+void UInteractComponent::MulticastRPC_InteractIngContainer_Implementation(AIngredientBase* Ingredient)
+{
+	if (Ingredient)
+	{
+		Ingredient->OnGrabbed(Owner);
+	
+		UPrimitiveComponent* Comp = Ingredient->GetMeshComp();
+		Comp->SetSimulatePhysics(false);
+		Comp->SetCollisionProfileName(TEXT("Grabbed"));
+		HoldDistance = FVector::Dist(Owner->GetFirstPersonCameraComponent()->GetComponentLocation(), Ingredient->GetActorLocation());
+		HoldDistance = FMath::Clamp(HoldDistance, 50, 200);
+		Ingredient->AttachToComponent(Owner->GetFirstPersonCameraComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		Ingredient->SetLocation(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);
+
+		bIsGrabbed = true;
+		GrabbedProp = Ingredient;
 	}
 }
 
@@ -68,26 +111,6 @@ void UInteractComponent::PutProps()
 		bIsGrabbed = false;
 		GrabbedProp = nullptr;
 	}
-}
-
-
-void UInteractComponent::MulticastRPC_GrabProps_Implementation(FHitResult Hit)
-{
-	IGrabableProps* GrabInterface = Cast<IGrabableProps>(Hit.GetActor());
-	if (GrabInterface == nullptr)
-		return;
-
-	GrabInterface->OnGrabbed(Owner);
-
-	Hit.GetComponent()->SetSimulatePhysics(false);
-	Hit.GetComponent()->SetCollisionProfileName(TEXT("Grabbed"));
-	HoldDistance = FVector::Dist(Owner->GetFirstPersonCameraComponent()->GetComponentLocation(), Hit.GetComponent()->GetComponentLocation());
-	HoldDistance = FMath::Clamp(HoldDistance, 50, 200);
-	Hit.GetActor()->AttachToComponent(Owner->GetFirstPersonCameraComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	GrabInterface->SetLocation(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);
-	
-	bIsGrabbed = true;
-	GrabbedProp = GrabInterface;
 }
 
 
