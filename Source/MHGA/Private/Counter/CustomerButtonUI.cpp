@@ -34,3 +34,8 @@ TArray<EBurgerMenu>& UCustomerButtonUI::GetMenuInfo()
 {
 	return Menus;
 }
+
+void UCustomerButtonUI::SetCustomer(ACustomerAI* InCustomer)
+{
+	Customer = InCustomer;
+}

@@ -20,4 +20,7 @@ class MHGA_API UCustomerUI : public UUserWidget
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class ACustomerAI* ownerAI;
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void Event_SetOrderText(const FText& Dialogue);
 };

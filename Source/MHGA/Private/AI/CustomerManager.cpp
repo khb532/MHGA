@@ -5,6 +5,7 @@
 #include "Counter/PickupZone.h" // 여기에 include 추가
 #include "AI/CustomerAI.h"
 #include "AI/CustomerFSM.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACustomerManager::ACustomerManager()
@@ -18,12 +19,23 @@ ACustomerManager::ACustomerManager()
 void ACustomerManager::BeginPlay()
 {
 	Super::BeginPlay();
-	// 스폰 시간 랜덤으로 지정
-	float spawnTime = FMath::RandRange(minTime, maxTime);
-	// 스폰 타이머 설정
-	GetWorld()->GetTimerManager().SetTimer(spawnTimer, this, &ACustomerManager::SpawnCustomer, spawnTime);
+	if (HasAuthority())
+	{
+		// 스폰 시간 랜덤으로 지정
+		float spawnTime = FMath::RandRange(minTime, maxTime);
+		// 스폰 타이머 설정
+		GetWorld()->GetTimerManager().SetTimer(spawnTimer, this, &ACustomerManager::SpawnCustomer, spawnTime);
+		// 게임 시작시 손님 대기칸 초기화
+		waitingCustomers.Init(nullptr, waitingPoints.Num());
+	}
+}
 
-	waitingCustomers.Init(nullptr, waitingPoints.Num());
+void ACustomerManager::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACustomerManager, waitingCustomers);
+	DOREPLIFETIME(ACustomerManager, wanderingCustomers);
 }
 
 // Called every frame
@@ -33,8 +45,12 @@ void ACustomerManager::Tick(float DeltaTime)
 
 }
 
+
+
 void ACustomerManager::SpawnCustomer()
 {
+	if (!HasAuthority()) return;
+	
 	// 현재 인원수가 최대 인원수보다 적은지 확인
 	if (CurrentSpawnedCustomers >= MaxSpawnedCustomers)
 	{
@@ -113,8 +129,8 @@ void ACustomerManager::OnCustomerFinished(ACustomerAI* customer)
 	{
 		if (waitingCustomers[i] == customer)
 		{
-			pickupCustomers.Add(customer);
-			// 손님 배열 지우기
+			// pickupCustomers.Add(customer);
+			// // 손님 배열 지우기
 			waitingCustomers[i] = nullptr;
 			break;
 		}
@@ -178,36 +194,36 @@ void ACustomerManager::CallNextCustomerFromWandering()
 		}
 	}
 }
-
-void ACustomerManager::OnFoodPlacedInZone(class APickupZone* Zone)
-{
-	// 대기자 명단에 손님이 있는지 확인합니다.
-	if (pickupCustomers.Num() > 0)
-	{
-		// 가장 오래 기다린 첫 번째 손님을 데려옵니다. (선입선출)
-		ACustomerAI* NextCustomer = pickupCustomers[0];
-		pickupCustomers.RemoveAt(0); // 대기자 명단에서 제거
-
-		UE_LOG(LogTemp, Log, TEXT("대기 중인 손님 %s를 픽업 존으로 보냅니다."), *NextCustomer->GetName());
-
-		// 손님 FSM에게 픽업 존으로 가라고 명령합니다.
-		if (IsValid(NextCustomer) && IsValid(NextCustomer->fsm))
-		{
-		UE_LOG(LogTemp, Log, TEXT("손님이 픽업존으로 가고있습니다"));
-			NextCustomer->fsm->CallToPickup();
-			
-		}
-		else
-		{
-		UE_LOG(LogTemp, Log, TEXT("픽업존 못감"));
-			
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("음식은 준비되었지만, 호출할 대기 손님이 없습니다."));
-	}
-}
+//
+// void ACustomerManager::OnFoodPlacedInZone(class APickupZone* Zone)
+// {
+// 	// 대기자 명단에 손님이 있는지 확인합니다.
+// 	if (pickupCustomers.Num() > 0)
+// 	{
+// 		// 가장 오래 기다린 첫 번째 손님을 데려옵니다
+// 		ACustomerAI* NextCustomer = pickupCustomers[0];
+// 		pickupCustomers.RemoveAt(0); // 대기자 명단에서 제거
+//
+// 		UE_LOG(LogTemp, Log, TEXT("대기 중인 손님 %s를 픽업 존으로 보냅니다."), *NextCustomer->GetName());
+//
+// 		// 손님 FSM에게 픽업 존으로 가라고 명령합니다.
+// 		if (IsValid(NextCustomer) && IsValid(NextCustomer->fsm))
+// 		{
+// 		UE_LOG(LogTemp, Log, TEXT("손님이 픽업존으로 가고있습니다"));
+// 			NextCustomer->fsm->CallToPickup();
+// 			
+// 		}
+// 		else
+// 		{
+// 		UE_LOG(LogTemp, Log, TEXT("픽업존 못감"));
+// 			
+// 		}
+// 	}
+// 	else
+// 	{
+// 		UE_LOG(LogTemp, Warning, TEXT("음식은 준비되었지만, 호출할 대기 손님이 없습니다."));
+// 	}
+// }
 
 void ACustomerManager::OnCustomerExited()
 {

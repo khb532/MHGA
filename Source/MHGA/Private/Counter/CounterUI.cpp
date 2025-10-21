@@ -136,6 +136,7 @@ void UCounterUI::OrderMenuBtnRPC()
 	if (NewCustomerBtn)
 	{
 		NewCustomerBtn->Init(OrderList, PosActor->OrderNum, this);
+		NewCustomerBtn->SetCustomer(PosActor->GetCustomer());
 		int32 NumChildren = CustomerGrid->GetChildrenCount();
 		int32 Row = NumChildren / GridCol;
 		int32 Col = NumChildren % GridCol;
@@ -202,7 +203,7 @@ void UCounterUI::OnMenuReadyBtnRPC()
 	if (CustomerBtn->GetCustomer() != nullptr)
 	{
 		//TODO : 손님 호출
-		
+		CustomerBtn->GetCustomer()->fsm->CallToPickup();
 	}
 	
 	CustomerBtn = nullptr;

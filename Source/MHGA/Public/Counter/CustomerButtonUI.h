@@ -46,5 +46,6 @@ public:
 	void Init(TArray<EBurgerMenu> InMenu, int32 InNum, UCounterUI* InOwner);
 	int32 GetNum();
 	TArray<EBurgerMenu>& GetMenuInfo();
+	void SetCustomer(ACustomerAI* InCustomer);
 	ACustomerAI* GetCustomer() {return Customer;}
 };

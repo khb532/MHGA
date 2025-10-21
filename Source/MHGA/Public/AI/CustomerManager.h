@@ -25,6 +25,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
 	// 손님 스폰 관리
@@ -66,12 +67,19 @@ public:
 	// 픽업 위치
 	UPROPERTY(EditAnywhere, Category = "Waiting Order")
 	TArray<ATargetPoint*> pickupPoints;
+	
 	// 줄에서 대기중인 손님열
-	UPROPERTY(EditAnywhere, Category = "Waiting Order")
+	UPROPERTY(EditAnywhere, Category = "Waiting Order", Replicated)
 	TArray<ACustomerAI*> waitingCustomers;
 	// 줄 밖에서 대기중인 손님열
-	UPROPERTY(EditAnywhere, Category = "Waiting Order")
+	UPROPERTY(EditAnywhere, Category = "Waiting Order", Replicated)
 	TArray<ACustomerAI*> wanderingCustomers;
+	// 줄 밖에서 대기중인 손님열
+	// UPROPERTY(EditAnywhere, Category = "Waiting Order")
+	// TArray<ACustomerAI*> pickupCustomers;
+	//
+	// /** [자동 보고] 픽업 존에서 음식이 준비되었다고 보고받았을 때 호출됩니다. */
+	// void OnFoodPlacedInZone(class APickupZone* Zone);
 	
 	UFUNCTION()
 	class ATargetPoint* RequestWaitingPoint(ACustomerAI* customer);
@@ -82,12 +90,6 @@ public:
 
 	UFUNCTION()
 	void OnCustomerFinished(ACustomerAI* customer);
-	// 줄 밖에서 대기중인 손님열
-	UPROPERTY(EditAnywhere, Category = "Waiting Order")
-	TArray<ACustomerAI*> pickupCustomers;
-
-	/** [자동 보고] 픽업 존에서 음식이 준비되었다고 보고받았을 때 호출됩니다. */
-	void OnFoodPlacedInZone(class APickupZone* Zone);
 	
 	UFUNCTION()
 	void UpdateWaitingPosition();

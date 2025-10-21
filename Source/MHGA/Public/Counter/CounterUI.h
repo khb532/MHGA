@@ -115,4 +115,7 @@ public:
 	void AddMenuToListRPC(const EBurgerMenu MenuName);
 	UFUNCTION()
 	void CustomerOrderedMenuRPC(UCustomerButtonUI* Btn);
+
+	UPROPERTY()
+	class ACustomerManager* manager;
 };

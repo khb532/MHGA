@@ -36,7 +36,6 @@ void APickupZone::BeginPlay()
 void APickupZone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void APickupZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -48,11 +47,12 @@ void APickupZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
 		UE_LOG(LogTemp, Log, TEXT("음식이 픽업 존에 놓였습니다: %s"), *Food->GetBurgerName());
 		curHamburger = Food;
 
-		// ★★★ 가장 중요한 변경점: 매니저에게 자동으로 보고하는 기능 부활 ★★★
-		if (IsValid(manager))
-		{
-			manager->OnFoodPlacedInZone(this);
-		}
+		// 손님 자동 호출
+		// TODO : 손님 수동 호출 만들기
+		// if (IsValid(manager))
+		// {
+		// 	manager->OnFoodPlacedInZone(this);
+		// }
 	}
 }
 

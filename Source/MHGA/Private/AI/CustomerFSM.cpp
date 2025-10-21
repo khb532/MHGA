@@ -16,6 +16,7 @@
 #include "Engine/TargetPoint.h"
 #include "Kismet/GameplayStatics.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UCustomerFSM::UCustomerFSM()
@@ -26,7 +27,6 @@ UCustomerFSM::UCustomerFSM()
 
 	waitingTimer = 0.f;
 }
-
 
 // Called when the game starts
 void UCustomerFSM::BeginPlay()
@@ -42,9 +42,19 @@ void UCustomerFSM::BeginPlay()
 	{
 		UE_LOG(LogTemp, Error, TEXT("FSM이 레벨에서 PickupZone을 찾을 수 없습니다!"));
 	}
-	
-	EnterStore();
 
+	Personality = static_cast<ECustomerPersonality>(FMath::RandRange(0, 3));
+	EnterStore();
+	
+}
+
+
+void UCustomerFSM::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCustomerFSM, curState);
+	DOREPLIFETIME(UCustomerFSM, orderedMenu);
 }
 
 
@@ -53,6 +63,7 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (!GetOwner()->HasAuthority()) return;
 	// const UEnum* EnumPtr = StaticEnum<EAIState>();
 	// if (EnumPtr)
 	// {
@@ -65,7 +76,7 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	// 	UE_LOG(LogTemp, Warning, TEXT("현재 상태: %s"), *EnumString);
 	// }
 	
-	if (CurrentState == EAIState::GoingToLine)
+	if (curState == EAIState::GoingToLine)
 	{
 		if (FVector::Dist2D(me->GetActorLocation() , manager->waitingPoints[0]->GetActorLocation()) <= 100)
 		{
@@ -75,7 +86,7 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	}
 	
 	// 지속되는 상태만 처리
-	if (CurrentState == EAIState::WaitingForFood)
+	if (curState == EAIState::WaitingForFood)
 	{
 		waitingTimer += DeltaTime;
 		if (waitingTimer > maxWaitTime)
@@ -87,7 +98,7 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	}
 
 
-	if (CurrentState == EAIState::GoingToPickup)
+	if (curState == EAIState::GoingToPickup)
 	{
 		if (FVector::Dist2D(me->GetActorLocation() , manager->pickupPoints[0]->GetActorLocation()) <= 100)
 		{
@@ -95,12 +106,12 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 		}
 	}
 
-	if (CurrentState == EAIState::WaitingForFood)
+	if (curState == EAIState::WaitingForFood)
 	{
 		
 	}
 
-	if (CurrentState == EAIState::Exit)
+	if (curState == EAIState::Exit)
 	if (FVector::Dist2D(me->GetActorLocation() , manager->spawnPoint->GetActorLocation()) <= 100)
 	{
 		me->Destroy();
@@ -108,23 +119,41 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	
 }
 
+
 void UCustomerFSM::SetState(EAIState NewState)
 {
+	if (!GetOwner()->HasAuthority()) return;
+	
 	// 이전과 같은 상태라면 함수에서 나가기
-	if (CurrentState == NewState)
+	if (curState == NewState)
 	{
 		return;
 	}
+	curState = NewState;
 
+	HandleStateEnter(curState);
+	
+}
+
+void UCustomerFSM::OnRep_StateChange()
+{
+	if (GetOwner()->HasAuthority()) return;
+
+	HandleStateEnter(curState);
+
+}
+
+void UCustomerFSM::HandleStateEnter(EAIState state)
+{	
 	StopWandering();
-
-	CurrentState = NewState;
-
-	switch (CurrentState)
+	
+	switch (state)
 	{
 	case EAIState::GoingToLine:
 		{
 			// 줄서기 위치까지 이동
+			if (!GetOwner()->HasAuthority()) return;
+			
 			if (orderTarget)
 			{
 				MoveToTarget(orderTarget);
@@ -148,8 +177,11 @@ void UCustomerFSM::SetState(EAIState NewState)
 
 	case EAIState::Ordering:
 		{
-			UE_LOG(LogTemp, Warning, TEXT("주문중"))
-			StartOrder();
+			if (GetOwner()->HasAuthority())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("주문중"))
+				StartOrder();
+			}
 			break;
 		}
 
@@ -186,6 +218,11 @@ void UCustomerFSM::SetState(EAIState NewState)
 
 void UCustomerFSM::EnterStore()
 {
+	Server_EnterStore();
+}
+
+void UCustomerFSM::Server_EnterStore_Implementation()
+{
 	// 가게 입장시 먼저 대기열이 있는지 확인
 	orderTarget = manager->RequestWaitingPoint(me);
 	// 대기열에 빈자리가 있다면
@@ -202,23 +239,10 @@ void UCustomerFSM::EnterStore()
 
 void UCustomerFSM::OnCalledToPickup()
 {
-	if (CurrentState == EAIState::WaitingForFood)
+	if (curState == EAIState::WaitingForFood)
 	{
 		SetState(EAIState::GoingToPickup);
 	}
-}
-
-void UCustomerFSM::ReceiveFood(const FString& receivedFood)
-{
-	if (receivedFood == DesiredMenu)
-	{
-		UE_LOG(LogTemp, Log, TEXT("주문한 메뉴와 동일"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("다른 메뉴를 전달함"));
-	}
-	SetState(EAIState::Exit);
 }
 
 void UCustomerFSM::StartWandering()
@@ -277,8 +301,10 @@ void UCustomerFSM::MoveToRandomLocation()
 
 void UCustomerFSM::StartOrder()
 {
+	// 혹시 모르는 방어 코드(지워도 됨)
+	if (!GetOwner()->HasAuthority()) return;
+	
 	AMHGAGameState* gs = Cast<AMHGAGameState>(GetWorld()->GetGameState());
-
 	gs->GetCounter()->ServerRPC_SetCustomer(me);
 	
 	// 랜덤으로 선택할 메뉴의 최소인덱스와 최대인덱스를 정수로 가져온다
@@ -289,41 +315,109 @@ void UCustomerFSM::StartOrder()
 	int32 RandomMenuIndex = FMath::RandRange(MinMenuIndex, MaxMenuIndex);
 
 	// 랜덤으로 선택된 정수를 enum 타입으로 변환해 변수에 저장한다
-	OrderedMenu = static_cast<EBurgerMenu>(RandomMenuIndex);
+	orderedMenu = static_cast<EBurgerMenu>(RandomMenuIndex);
 
 	// UEnum*을 찾아 enum 값을 문자열로 변환합니다.
 	const UEnum* BurgerEnum = FindObject<UEnum>(nullptr, TEXT("/Script/MHGA.EBurgerMenu"), true);
 	if (BurgerEnum)
 	{
-		FString EnumAsString = BurgerEnum->GetNameStringByValue(static_cast<int64>(OrderedMenu));
+		FString EnumAsString = BurgerEnum->GetNameStringByValue(static_cast<int64>(orderedMenu));
 		UE_LOG(LogTemp, Warning, TEXT("주문 메뉴 결정: %s"), *EnumAsString);
 	}
 	
+	CurrentDialogue = GetOrderedMenuAsText();
+	OrderedQuantity = FMath::RandRange(1, 3);
+	UE_LOG(LogTemp, Error, TEXT("%s"), *CurrentDialogue.ToString());
+	
+	me->ShowOrderUI();
+}
+
+void UCustomerFSM::OnRep_Order()
+{
 	me->ShowOrderUI();
 }
 
 FText UCustomerFSM::GetOrderedMenuAsText()
 {
-	switch (OrderedMenu)
-	{
-	case EBurgerMenu::BigMac:
-		return NSLOCTEXT("BurgerMenu", "BicMac", "빅맥 하나 주세요");
-	case EBurgerMenu::BTD:
-		return NSLOCTEXT("BurgerMenu", "BTD", "베토디 하나 주세요");
-	case EBurgerMenu::QPC:
-		return NSLOCTEXT("BurgerMenu", "QPC", "쿼파치 하나 주세요");
-	case EBurgerMenu::Shanghai:
-		return NSLOCTEXT("BurgerMenu", "Shanghai", "상하이버거 하나 주세요");
-	case EBurgerMenu::Shrimp:
-		return NSLOCTEXT("BurgerMenu", "Shrimp", "새우 버거 하나 주세요");
-	default:
-		return FText::GetEmpty();
-	}
+	if (!MenuDialogueTable) return FText::GetEmpty();
+	
+	// Enum 값(EBurgerMenu::BigMac)을 FName("BigMac")으로 변환
+    // (데이터 테이블의 Row Name과 일치해야 함)
+    const FString EnumString = StaticEnum<EBurgerMenu>()->GetNameStringByValue(static_cast<int64>(orderedMenu));
+    const FName RowName = FName(*EnumString);
+ 
+    // 데이터 테이블에서 해당 메뉴의 행 찾기
+    static const FString ContextString(TEXT("GetOrderedMenuAsText"));
+    FOrderDialogue* DialogueRow = MenuDialogueTable->FindRow<FOrderDialogue>(RowName, ContextString);
+ 
+    if (!DialogueRow)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DT_MenuDialogue에서 %s 행을 찾을 수 없습니다."), *RowName.ToString());
+        return FText::GetEmpty();
+    }
+ 
+    // 4. 손님의 성격(Personality)에 따라 사용할 대사 배열(Variations)을 선택
+    const TArray<FText>* Variations = nullptr; // 원본 배열을 가리킬 포인터
+    switch (Personality)
+    {
+    case ECustomerPersonality::Polite:
+        Variations = &DialogueRow->Polite_Variations;
+        break;
+    case ECustomerPersonality::Rude:
+        Variations = &DialogueRow->Rude_Variations;
+        break;
+    case ECustomerPersonality::Impatient:
+        Variations = &DialogueRow->Impatient_Variations;
+        break;
+    case ECustomerPersonality::Standard:
+    default:
+        Variations = &DialogueRow->Standard_Variations;
+        break;
+    }
+ 
+    // 5. 선택된 배열에서 무작위 대사 하나를 선택
+    if (!Variations || Variations->Num() == 0)
+    {
+        // 해당 성격에 대사가 없으면 Standard로 대체 시도
+        Variations = &DialogueRow->Standard_Variations;
+        if (!Variations || Variations->Num() == 0)
+        {
+             UE_LOG(LogTemp, Warning, TEXT("%s 행에 유효한 대사가 없습니다."), *RowName.ToString());
+             return FText::GetEmpty(); // 대체 대사도 없으면 포기
+        }
+    }
+ 
+    // 무작위 인덱스 선택
+    const int32 RandomIndex = FMath::RandRange(0, Variations->Num() - 1);
+    const FText FormatTemplate = (*Variations)[RandomIndex]; // 포맷팅할 원본 FText (예: "{MenuName} {Quantity}개 주세요.")
+ 
+    // 6. FText::Format을 사용하여 대사 포맷팅
+    FFormatNamedArguments Args;
+    Args.Add(TEXT("MenuName"), DialogueRow->MenuDisplayName); // {MenuName} -> "빅맥"
+    Args.Add(TEXT("Quantity"), OrderedQuantity);             // {Quantity} -> 2 (예시)
+ 
+    return FText::Format(FormatTemplate, Args);
+	
+	// switch (orderedMenu)
+	// {
+	// case EBurgerMenu::BigMac:
+	// 	return NSLOCTEXT("BurgerMenu", "BicMac", "빅맥 하나 주세요");
+	// case EBurgerMenu::BTD:
+	// 	return NSLOCTEXT("BurgerMenu", "BTD", "베토디 하나 주세요");
+	// case EBurgerMenu::QPC:
+	// 	return NSLOCTEXT("BurgerMenu", "QPC", "쿼파치 하나 주세요");
+	// case EBurgerMenu::Shanghai:
+	// 	return NSLOCTEXT("BurgerMenu", "Shanghai", "상하이버거 하나 주세요");
+	// case EBurgerMenu::Shrimp:
+	// 	return NSLOCTEXT("BurgerMenu", "Shrimp", "새우 버거 하나 주세요");
+	// default:
+	// 	return FText::GetEmpty();
+	// }
 }
 
 void UCustomerFSM::FinishOrder()
 {
-	if (CurrentState == EAIState::Ordering)
+	if (curState == EAIState::Ordering)
 	{
 		if (manager)
 		{
@@ -347,7 +441,7 @@ void UCustomerFSM::FinishOrder()
 void UCustomerFSM::CallToPickup()
 {
 	// 음식을 기다리거나 배회하는 상태일 때만 호출에 응답합니다.
-	if ((CurrentState == EAIState::WaitingForFood || CurrentState == EAIState::Wandering))
+	if ((curState == EAIState::WaitingForFood || curState == EAIState::Wandering))
 	{
 		SetState(EAIState::GoingToPickup);
 	}
@@ -383,7 +477,7 @@ void UCustomerFSM::CheckAndTakeFood()
 			if (BurgerEnum)
 			{
 				// GetNameStringByValue는 "BigMac"과 같이 깔끔한 이름을 반환합니다.
-				OrderedMenuName = BurgerEnum->GetNameStringByValue(static_cast<int64>(OrderedMenu));
+				OrderedMenuName = BurgerEnum->GetNameStringByValue(static_cast<int64>(orderedMenu));
 			}
 
 			// --- 2. 햄버거 액터에서 FString 이름을 가져옴 ---
@@ -418,10 +512,10 @@ void UCustomerFSM::CheckAndTakeFood()
 
 void UCustomerFSM::ExitStore()
 {
-	ExitTarget = manager->RequestExitPoint();
-	if (ExitTarget)
+	exitTarget = manager->RequestExitPoint();
+	if (exitTarget)
 	{
-		MoveToTarget(ExitTarget);
+		MoveToTarget(exitTarget);
 		GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 		if (manager)
 		{

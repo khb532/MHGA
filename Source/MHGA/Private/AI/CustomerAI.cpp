@@ -18,15 +18,17 @@ ACustomerAI::ACustomerAI()
 
 	fsm = CreateDefaultSubobject<UCustomerFSM>(TEXT("FSM"));
 	
-	judgeWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("JudgeWidget"));
-	judgeWidget->SetupAttachment(GetRootComponent());
+	widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("JudgeWidget"));
+	widget->SetupAttachment(GetRootComponent());
 	// 항상 화면을 향하게
-	judgeWidget->SetWidgetSpace(EWidgetSpace::Screen);
-	judgeWidget->SetDrawSize(FVector2D(150, 50));
-	judgeWidget->SetVisibility(false);
+	widget->SetWidgetSpace(EWidgetSpace::Screen);
+	widget->SetDrawSize(FVector2D(150, 50));
+	widget->SetVisibility(false);
 	
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+	bReplicates = true;
+	fsm->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned
@@ -73,7 +75,12 @@ void ACustomerAI::ShowOrderUI()
 		// 리페어런팅을 했다면, 자식 클래스로 형 변환하여 OwnerAI 변수에 접근
 		if (UCustomerUI* OrderBubble = Cast<UCustomerUI>(orderWidgetInst))
 		{
-			OrderBubble->ownerAI = this; // 'this'는 이 코드를 실행하는 인스턴스 자신
+			OrderBubble->ownerAI = this; 
+
+			if (fsm)
+			{
+				OrderBubble->Event_SetOrderText(fsm->GetCurrentDialogue());
+			}
 		}
 
 		orderWidgetInst->AddToViewport();
@@ -90,13 +97,18 @@ void ACustomerAI::HideOrderUI()
 
 void ACustomerAI::ShowReputationText(bool bIsPositive)
 {
-	if (!judgeWidget) return;
+	Multicast_ShowReputationText(bIsPositive);
+}
+
+void ACustomerAI::Multicast_ShowReputationText_Implementation(bool bIsPositive)
+{
+	if (!widget) return;
 
 	// 위젯 컴포넌트를 보이게 합니다.
-	judgeWidget->SetVisibility(true);
+	widget->SetVisibility(true);
 
 	// 컴포넌트가 가지고 있는 실제 위젯 인스턴스를 가져옵니다.
-	UUserWidget* widgetInst = judgeWidget->GetUserWidgetObject();
+	UUserWidget* widgetInst = widget->GetUserWidgetObject();
 	if (widgetInst)
 	{
 		// 위젯 블루프린트에 만들어 둔 'ShowFeedbackText' 이벤트를 이름으로 찾아 호출합니다.

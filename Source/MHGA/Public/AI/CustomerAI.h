@@ -30,7 +30,7 @@ public:
 	
 	// 손님 머리 위에 텍스트 UI를 표시할 위젯 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	class UWidgetComponent* judgeWidget;
+	class UWidgetComponent* widget;
 	
 	// FSM의 데이터를 대신 전달해주는 '대리인' 함수
 	UFUNCTION(BlueprintPure, Category = "AI Order")
@@ -47,8 +47,11 @@ public:
 	void ShowOrderUI();
 	UFUNCTION(BlueprintCallable, Category = "AI Order")
 	void HideOrderUI();
+	
 	// 메뉴 판단후 손님 상단 UI 표시 함수
 	UFUNCTION(BlueprintCallable, Category = "AI Order")
 	void ShowReputationText(bool bIsPositive);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ShowReputationText(bool bIsPositive);
 	
 };

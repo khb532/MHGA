@@ -38,7 +38,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	bool bShowLog = true;
-private:
+
+	UPROPERTY(EditAnywhere)
 	FString BurgerName;
 
 	// 황규환이 추가함 햄버거 이름 받아오기용 함수
