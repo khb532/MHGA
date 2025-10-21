@@ -7,7 +7,7 @@ APatty::APatty()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	IngType = EIngredient::Patty;
+	IngType = EIngredient::RawPatty;
 }
 
 void APatty::BeginPlay()
@@ -30,4 +30,10 @@ void APatty::SetCookState(EPattyCookState NewState)
 {
 	CookState = NewState;
 	// TODO : 패티의 상태에 따라 추가 효과 넣기(연기 등)
+
+	if ( CookState == EPattyCookState::Cooked )
+		IngType = EIngredient::WellDonePatty;
+	
+	if ( CookState == EPattyCookState::Overcooked )
+		IngType = EIngredient::OvercookedPatty;
 }

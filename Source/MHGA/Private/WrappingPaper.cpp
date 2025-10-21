@@ -96,7 +96,7 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 	if (bShowLog)
 		GEngine->AddOnScreenDebugMessage(2, 2.f, FColor::Red, "Off Overlapped & MinusIngredient");
 	
-	 // 1. Collide Out, if(Not Ingredient OR self) return
+	 // 1. Collide Out, if(self) return
 	if (OtherActor == nullptr || OtherActor == this) return;
 
 	for (int32 i = OverlappingActors.Num() - 1; i >= 0; --i)
@@ -106,22 +106,20 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 			OverlappingActors.RemoveAt(i);
 		}
 	}
-
-	AIngredientBase* Ingredient = Cast<AIngredientBase>(OtherActor);
-	if (Ingredient == nullptr) return;
-
-	bool hasNotFound = true;
 	
-	if (Ingredient->GetIngType() == EIngredient::None) 
+	bool hasNotFound = true;
+	AIngredientBase* Ingredient = Cast<AIngredientBase>(OtherActor);
+	
+	if (Ingredient == nullptr) 
 	{
 		for (int32 i = 0 ; i < OnAreaIngredients.Num(); i++)
 		{
 			if (OnAreaIngredients[i].IngredientId == EIngredient::None)
 			{
+				hasNotFound = false;
 				--OnAreaIngredients[i].Quantity;
 				if (OnAreaIngredients[i].Quantity <= 0)
 					OnAreaIngredients.RemoveAt(i);
-				hasNotFound = false;
 				break;
 			}
 		}
@@ -133,10 +131,10 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 		{
 			if (OnAreaIngredients[i].IngredientId == Ingredient->GetIngType())
 			{
-				// 3. Found. Quantity - 1
-				--OnAreaIngredients[i].Quantity;
 				hasNotFound = false;
+				// 3. Found. Quantity - 1
 				// 4. Quantity <= 0, RemoveAt
+				--OnAreaIngredients[i].Quantity;
 				if (OnAreaIngredients[i].Quantity <= 0)
 					OnAreaIngredients.RemoveAt(i);
 				break;
@@ -153,7 +151,6 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 
 void AWrappingPaper::PrintLog()
 {
-	
 	FString ActorName = this->GetActorNameOrLabel();
 	const UEnum* IngEnum = StaticEnum<EIngredient>();
 	if (IngEnum == nullptr) return;
@@ -250,15 +247,13 @@ bool AWrappingPaper::HasBreadPair() const
 
 bool AWrappingPaper::HasExtraIngredient() const
 {
-	// TODO: OnAreaIngredients 배열에서 빵 이외 재료들의 총 수량을 누적한다.
-	int32 count = 0;
 	for (const FIngredientStack& tmp : OnAreaIngredients)
 	{
 		if (!(tmp.IngredientId == EIngredient::BottomBread || tmp.IngredientId == EIngredient::TopBread))
-			count++;
+			return true;
 	}
-	// TODO: 누적된 수량이 1 이상이면 true, 그렇지 않으면 false를 반환한다.
-	return count > 0 ? true : false;
+	
+	return false;
 }
 
 void AWrappingPaper::CompleteWrapping()
