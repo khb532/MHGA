@@ -53,7 +53,7 @@ void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSucc
 		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 성공"), *sessionName.ToString())
 
 		//레벨 이동 - 정확한 경로 적어야됨, 생성자에서 한 것처럼 하면 안됨
-		//GetWorld()->ServerTravel(TEXT("/Game/ThirdPerson/Lvl_ThirdPerson?Listen"));
+		GetWorld()->ServerTravel(TEXT("/Game/Maps/Lobby?Listen"));
 	}
 	else
 	{
@@ -127,6 +127,6 @@ void UMHGAGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionC
 		//서버가 있는 맵으로 이동 (최초에 한 번만)
 		APlayerController* pc = GetWorld()->GetFirstPlayerController();
 		
-		//pc->ClientTravel(url, TRAVEL_Absolute);
+		pc->ClientTravel(url, TRAVEL_Absolute);
 	}
 }

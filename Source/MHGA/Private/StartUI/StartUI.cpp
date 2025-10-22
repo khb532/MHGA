@@ -70,8 +70,8 @@ void UStartUI::OnClickRegisterJobBtn()
 	FString AlbaName = Input_Name->GetText().ToString();
 	int32 Number = FCString::Atoi(*Input_Number->GetText().ToString());
 
+	//OnClickMakeJobExitBtn();
 	GI->CreateMySession(AlbaName, Number);
-	OnClickMakeJobExitBtn();
 }
 
 void UStartUI::OnInputNumChange(const FText& Text)
