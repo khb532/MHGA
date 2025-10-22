@@ -11,6 +11,7 @@
 #include "AI/CustomerAI.h"
 #include "AI/CustomerManager.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 #include "Counter/CounterPOS.h"
 #include "Counter/PickupZone.h"
 #include "Engine/TargetPoint.h"
@@ -43,7 +44,7 @@ void UCustomerFSM::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("FSM이 레벨에서 PickupZone을 찾을 수 없습니다!"));
 	}
 
-	Personality = static_cast<ECustomerPersonality>(FMath::RandRange(0, 3));
+	personality = static_cast<ECustomerPersonality>(FMath::RandRange(0, 3));
 	EnterStore();
 	
 }
@@ -55,8 +56,8 @@ void UCustomerFSM::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& O
 
 	DOREPLIFETIME(UCustomerFSM, curState);
 	DOREPLIFETIME(UCustomerFSM, orderedMenu);
+	DOREPLIFETIME(UCustomerFSM, curDialogue);
 }
-
 
 // Called every frame
 void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -64,26 +65,6 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (!GetOwner()->HasAuthority()) return;
-	// const UEnum* EnumPtr = StaticEnum<EAIState>();
-	// if (EnumPtr)
-	// {
-	// 	// GetValueAsString은 "EAIState::GoingToLine" 형태의 전체 이름을 반환합니다.
-	// 	FString EnumString = EnumPtr->GetValueAsString(CurrentState);
-	//
-	// 	// (선택 사항) "EAIState::" 부분을 제거하여 "GoingToLine"만 남기면 더 깔끔합니다.
-	// 	EnumString.RemoveFromStart(TEXT("EAIState::"));
-	//
-	// 	UE_LOG(LogTemp, Warning, TEXT("현재 상태: %s"), *EnumString);
-	// }
-	
-	if (curState == EAIState::GoingToLine)
-	{
-		if (FVector::Dist2D(me->GetActorLocation() , manager->waitingPoints[0]->GetActorLocation()) <= 100)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("주문 시작"))
-			SetState(EAIState::Ordering);
-		}
-	}
 	
 	// 지속되는 상태만 처리
 	if (curState == EAIState::WaitingForFood)
@@ -125,10 +106,8 @@ void UCustomerFSM::SetState(EAIState NewState)
 	if (!GetOwner()->HasAuthority()) return;
 	
 	// 이전과 같은 상태라면 함수에서 나가기
-	if (curState == NewState)
-	{
-		return;
-	}
+	if (curState == NewState) return;
+	
 	curState = NewState;
 
 	HandleStateEnter(curState);
@@ -141,6 +120,29 @@ void UCustomerFSM::OnRep_StateChange()
 
 	HandleStateEnter(curState);
 
+	if (me)
+	{
+		if (curState == EAIState::Ordering)
+		{
+			me->ShowOrderUI();
+		}
+		else
+		{
+			me->HideOrderUI();
+		}
+	}
+
+}
+
+void UCustomerFSM::OnRep_Dialogue()
+{
+	if (me && me->customerWidget)
+	{
+		if (UCustomerUI* orderWidget = Cast<UCustomerUI>(me->customerWidget->GetUserWidgetObject()))
+		{
+			orderWidget->Event_SetOrderText(curDialogue);
+		}
+	}
 }
 
 void UCustomerFSM::HandleStateEnter(EAIState state)
@@ -158,6 +160,7 @@ void UCustomerFSM::HandleStateEnter(EAIState state)
 			{
 				MoveToTarget(orderTarget);
 				UE_LOG(LogTemp, Warning, TEXT("주문하러 이동중"))
+				AIController->GetPathFollowingComponent()->OnRequestFinished.AddUObject(this, &UCustomerFSM::OnMoveToTargetCompleted);
 			}
 			break;
 		}
@@ -259,14 +262,6 @@ void UCustomerFSM::StartWandering()
 		true, 
 		0.0f
 	);
-	
-	// auto ns = UNavigationSystemV1::GetNavigationSystem(GetWorld());
-	//
-	// auto result = AIController->MoveToLocation(randomPos);
-	// if (result == EPathFollowingRequestResult::Type::AlreadyAtGoal || result == EPathFollowingRequestResult::Failed)
-	// {
-	// 	GetRandomPositionInNavMesh(me->GetActorLocation(), 500, randomPos);
-	// }
 }
 
 void UCustomerFSM::StopWandering()
@@ -325,9 +320,9 @@ void UCustomerFSM::StartOrder()
 		UE_LOG(LogTemp, Warning, TEXT("주문 메뉴 결정: %s"), *EnumAsString);
 	}
 	
-	CurrentDialogue = GetOrderedMenuAsText();
-	OrderedQuantity = FMath::RandRange(1, 3);
-	UE_LOG(LogTemp, Error, TEXT("%s"), *CurrentDialogue.ToString());
+	curDialogue = GetOrderedMenuAsText();
+	orderQuantity = FMath::RandRange(1, 3);
+	UE_LOG(LogTemp, Error, TEXT("%s"), *curDialogue.ToString());
 	
 	me->ShowOrderUI();
 }
@@ -358,7 +353,7 @@ FText UCustomerFSM::GetOrderedMenuAsText()
  
     // 4. 손님의 성격(Personality)에 따라 사용할 대사 배열(Variations)을 선택
     const TArray<FText>* Variations = nullptr; // 원본 배열을 가리킬 포인터
-    switch (Personality)
+    switch (personality)
     {
     case ECustomerPersonality::Polite:
         Variations = &DialogueRow->Polite_Variations;
@@ -391,28 +386,12 @@ FText UCustomerFSM::GetOrderedMenuAsText()
     const int32 RandomIndex = FMath::RandRange(0, Variations->Num() - 1);
     const FText FormatTemplate = (*Variations)[RandomIndex]; // 포맷팅할 원본 FText (예: "{MenuName} {Quantity}개 주세요.")
  
-    // 6. FText::Format을 사용하여 대사 포맷팅
+    //  FText::Format을 사용하여 대사 포맷팅
     FFormatNamedArguments Args;
-    Args.Add(TEXT("MenuName"), DialogueRow->MenuDisplayName); // {MenuName} -> "빅맥"
-    Args.Add(TEXT("Quantity"), OrderedQuantity);             // {Quantity} -> 2 (예시)
+    Args.Add(TEXT("MenuName"), DialogueRow->MenuDisplayName); 
+    Args.Add(TEXT("Quantity"), orderQuantity);             
  
     return FText::Format(FormatTemplate, Args);
-	
-	// switch (orderedMenu)
-	// {
-	// case EBurgerMenu::BigMac:
-	// 	return NSLOCTEXT("BurgerMenu", "BicMac", "빅맥 하나 주세요");
-	// case EBurgerMenu::BTD:
-	// 	return NSLOCTEXT("BurgerMenu", "BTD", "베토디 하나 주세요");
-	// case EBurgerMenu::QPC:
-	// 	return NSLOCTEXT("BurgerMenu", "QPC", "쿼파치 하나 주세요");
-	// case EBurgerMenu::Shanghai:
-	// 	return NSLOCTEXT("BurgerMenu", "Shanghai", "상하이버거 하나 주세요");
-	// case EBurgerMenu::Shrimp:
-	// 	return NSLOCTEXT("BurgerMenu", "Shrimp", "새우 버거 하나 주세요");
-	// default:
-	// 	return FText::GetEmpty();
-	// }
 }
 
 void UCustomerFSM::FinishOrder()
@@ -531,3 +510,32 @@ void UCustomerFSM::MoveToTarget(const ATargetPoint* target)
 		AIController->MoveToLocation(target->GetActorLocation());
 	}
 }
+
+void UCustomerFSM::OnMoveToTargetCompleted(FAIRequestID id, const FPathFollowingResult& result)
+{
+	// 서버에서만 실행되게
+	if (!GetOwner()->HasAuthority()) return;
+	// 줄서러 가는중 or 줄서기중이 아니면 함수 탈출
+	if (curState != EAIState:: GoingToLine && curState != EAIState::WaitingInLine) return;
+
+	// 목적지 도착 성공시
+	if (result.Code == EPathFollowingResult::Success)
+	{
+		if (orderTarget && manager && orderTarget == manager->waitingPoints[0])
+		{
+			UE_LOG(LogTemp, Warning, TEXT("도착, 주문 시작"));
+			SetState(EAIState::Ordering);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("도착, 줄서서 대기"));
+			SetState(EAIState::WaitingInLine);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("이동 실패, 다시 대기열 요청"));
+		EnterStore();
+	}
+}
+

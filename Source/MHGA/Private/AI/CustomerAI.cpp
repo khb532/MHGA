@@ -9,6 +9,9 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
 #include "DSP/AudioDebuggingUtilities.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Runtime/Renderer/Internal/VT/VirtualTextureFeedbackResource.h"
 
 // Sets default values
 ACustomerAI::ACustomerAI()
@@ -18,17 +21,23 @@ ACustomerAI::ACustomerAI()
 
 	fsm = CreateDefaultSubobject<UCustomerFSM>(TEXT("FSM"));
 	
-	widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("JudgeWidget"));
-	widget->SetupAttachment(GetRootComponent());
-	// 항상 화면을 향하게
-	widget->SetWidgetSpace(EWidgetSpace::Screen);
-	widget->SetDrawSize(FVector2D(150, 50));
-	widget->SetVisibility(false);
+	customerWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("CustomerWidget"));
+	customerWidget->SetupAttachment(GetRootComponent());
+	
+	customerWidget->SetWidgetSpace(EWidgetSpace::World);
+	
+	customerWidget->SetRelativeLocation(FVector(0, 0, 100));
+	customerWidget->SetDrawSize(FVector2D(350, 70));
+	customerWidget->SetPivot(FVector2D(0.5f, 1.0f));
+	
+	customerWidget->SetVisibility(false);
+	customerWidget->SetIsReplicated(true);
 	
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	bReplicates = true;
-	fsm->SetIsReplicated(true);
+	if(fsm) fsm->SetIsReplicated(true); 
+	if(customerWidget) customerWidget->SetIsReplicated(true); 
 }
 
 // Called when the game starts or when spawned
@@ -42,6 +51,31 @@ void ACustomerAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 위젯 회전(모든 클라이언트)
+	if (customerWidget && customerWidget->IsVisible())
+	{
+		APlayerCameraManager* camManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+		if (camManager)
+		{
+			FVector camLocation = camManager->GetCameraLocation();
+			FVector widgetLocation = customerWidget->GetComponentLocation();
+
+			// 위젯이 카메라를 바라보도록 회전값 계산
+			FRotator widgetLookRot = UKismetMathLibrary::FindLookAtRotation(widgetLocation, camLocation);
+
+			// 계산된 회전값 설정
+			customerWidget->SetWorldRotation(widgetLookRot);
+		}
+	}
+
+}
+
+void ACustomerAI::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACustomerAI, fsm); 
+	DOREPLIFETIME(ACustomerAI, customerWidget); 
 }
 
 FText ACustomerAI::GetOrderTextFromFSM()
@@ -56,86 +90,77 @@ FText ACustomerAI::GetOrderTextFromFSM()
 
 void ACustomerAI::ShowOrderUI()
 {
-	// OrderWidgetClass가 에디터에서 지정되었는지 확인
-	if (!orderWidget)
+	if (!fsm || !customerWidget) return;
+
+	// 위젯 컴포넌트를 보이게 설정 (서버에서 호출시 클라이언트에 복제됨)
+	customerWidget->SetVisibility(true);
+
+	// 보유중인 실제 위젯 가져오기
+	UUserWidget* widgetInst = customerWidget->GetUserWidgetObject();
+
+	// 위젯 초기화가 안되어있으면 실행
+	if (widgetInst == nullptr && customerWidget->GetWidgetClass())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OrderWidgetClass is not set in %s"), *GetName());
-		return;
+		customerWidget->InitWidget();
+		widgetInst = customerWidget->GetUserWidgetObject();
 	}
 
-	// 위젯이 아직 생성되지 않았다면 새로 생성
-	if (!orderWidgetInst)
+	if (UCustomerUI* orderWidget = Cast<UCustomerUI>(widgetInst))
 	{
-		orderWidgetInst = CreateWidget(GetWorld(), orderWidget);
-	}
-    
-	// 위젯이 유효한지 다시 한번 확인하고, OwnerAI를 설정한 뒤 화면에 추가
-	if (orderWidgetInst)
-	{
-		// 리페어런팅을 했다면, 자식 클래스로 형 변환하여 OwnerAI 변수에 접근
-		if (UCustomerUI* OrderBubble = Cast<UCustomerUI>(orderWidgetInst))
-		{
-			OrderBubble->ownerAI = this; 
-
-			if (fsm)
-			{
-				OrderBubble->Event_SetOrderText(fsm->GetCurrentDialogue());
-			}
-		}
-
-		orderWidgetInst->AddToViewport();
+		orderWidget->Event_SetOrderText(fsm->GetCurrentDialogue());
 	}
 }
 
 void ACustomerAI::HideOrderUI()
 {
-	if (orderWidgetInst && orderWidgetInst->IsInViewport())
+	if (customerWidget)
 	{
-		orderWidgetInst->RemoveFromParent();
+		customerWidget->SetVisibility(false);
 	}
 }
 
 void ACustomerAI::ShowReputationText(bool bIsPositive)
 {
-	Multicast_ShowReputationText(bIsPositive);
+	if (HasAuthority())
+	{
+		Multicast_ShowReputationText(bIsPositive);
+	}
 }
 
 void ACustomerAI::Multicast_ShowReputationText_Implementation(bool bIsPositive)
 {
-	if (!widget) return;
+	if (!customerWidget) return;
 
-	// 위젯 컴포넌트를 보이게 합니다.
-	widget->SetVisibility(true);
+	// 텍스트, 색상 변수
+	FText FeedbackText;
+	FLinearColor FeedbackColor;
 
-	// 컴포넌트가 가지고 있는 실제 위젯 인스턴스를 가져옵니다.
-	UUserWidget* widgetInst = widget->GetUserWidgetObject();
-	if (widgetInst)
+	if (bIsPositive)
 	{
-		// 위젯 블루프린트에 만들어 둔 'ShowFeedbackText' 이벤트를 이름으로 찾아 호출합니다.
-		UFunction* function = widgetInst->FindFunction(FName("ShowFeedbackText"));
-		if (function)
-		{
-			// 함수에 전달할 파라미터를 준비합니다.
-			struct FFeedbackParams
-			{
-				FText Message;
-				FLinearColor Color;
-			};
-
-			FFeedbackParams Params;
-			if (bIsPositive)
-			{
-				Params.Message = NSLOCTEXT("Feedback", "Good", ":)");
-				Params.Color = FLinearColor::White;
-			}
-			else
-			{
-				Params.Message = NSLOCTEXT("Feedback", "Bad", ":(");
-				Params.Color = FLinearColor::Red;
-			}
-
-			// 함수를 실행합니다.
-			widgetInst->ProcessEvent(function, &Params);
-		}
+		FeedbackText = NSLOCTEXT("Feedback", "Good", ":)");
+		FeedbackColor = FLinearColor::White;
 	}
+	else
+	{
+		FeedbackText = NSLOCTEXT("Feedback", "Bad", ":(");
+		FeedbackColor = FLinearColor::Red;
+	}
+	// 컴포넌트가 가지고 있는 실제 위젯 가져오기
+	UUserWidget* widgetInst = customerWidget->GetUserWidgetObject();
+	// 초기화 확인 로직
+	if (widgetInst == nullptr && customerWidget->GetWidgetClass())
+	{
+		customerWidget->InitWidget();
+		widgetInst = customerWidget->GetUserWidgetObject();
+	}
+
+	// 이벤트 호출
+	if (UCustomerUI* reputationUI = Cast<UCustomerUI>(widgetInst))
+	{
+		reputationUI->Event_SetOrderText(FeedbackText);
+		reputationUI->Event_SetTextColor(FeedbackColor);
+	}
+
+	// 위젯 컴포넌트 보이게 설정
+	customerWidget->SetVisibility(true);
 }

@@ -194,36 +194,6 @@ void ACustomerManager::CallNextCustomerFromWandering()
 		}
 	}
 }
-//
-// void ACustomerManager::OnFoodPlacedInZone(class APickupZone* Zone)
-// {
-// 	// 대기자 명단에 손님이 있는지 확인합니다.
-// 	if (pickupCustomers.Num() > 0)
-// 	{
-// 		// 가장 오래 기다린 첫 번째 손님을 데려옵니다
-// 		ACustomerAI* NextCustomer = pickupCustomers[0];
-// 		pickupCustomers.RemoveAt(0); // 대기자 명단에서 제거
-//
-// 		UE_LOG(LogTemp, Log, TEXT("대기 중인 손님 %s를 픽업 존으로 보냅니다."), *NextCustomer->GetName());
-//
-// 		// 손님 FSM에게 픽업 존으로 가라고 명령합니다.
-// 		if (IsValid(NextCustomer) && IsValid(NextCustomer->fsm))
-// 		{
-// 		UE_LOG(LogTemp, Log, TEXT("손님이 픽업존으로 가고있습니다"));
-// 			NextCustomer->fsm->CallToPickup();
-// 			
-// 		}
-// 		else
-// 		{
-// 		UE_LOG(LogTemp, Log, TEXT("픽업존 못감"));
-// 			
-// 		}
-// 	}
-// 	else
-// 	{
-// 		UE_LOG(LogTemp, Warning, TEXT("음식은 준비되었지만, 호출할 대기 손님이 없습니다."));
-// 	}
-// }
 
 void ACustomerManager::OnCustomerExited()
 {

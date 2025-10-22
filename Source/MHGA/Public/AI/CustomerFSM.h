@@ -7,6 +7,7 @@
 #include "Components/ActorComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "OrderDialogue.h"
+#include "Navigation/PathFollowingComponent.h"
 #include "CustomerFSM.generated.h"
 
 UENUM(BlueprintType)
@@ -57,15 +58,18 @@ public:
 	
 	// 이 손님의 현재 성격
 	UPROPERTY(VisibleInstanceOnly, Category = "AI State")
-	ECustomerPersonality Personality = ECustomerPersonality::Standard;
+	ECustomerPersonality personality = ECustomerPersonality::Standard;
 
 	/** 주문 상태 진입 시 생성되어 저장되는 실제 대사입니다. UI는 이 변수를 읽습니다. */
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "AI Order")
-	FText CurrentDialogue;
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "AI Order", ReplicatedUsing = OnRep_Dialogue)
+	FText curDialogue;
 	
 	// UI가 이 변수를 쉽게 가져갈 수 있도록 Getter 함수를 하나 만듭니다.
 	UFUNCTION(BlueprintPure, Category = "AI | Dialogue")
-	FText GetCurrentDialogue() const { return CurrentDialogue; }
+	FText GetCurrentDialogue() const { return curDialogue; }
+
+	UFUNCTION()
+	void OnRep_Dialogue();
 
 	UPROPERTY(EditAnywhere, Category = "AI State")
 	float maxWaitTime = 30.f;		// 최대 대기 시간
@@ -78,7 +82,7 @@ public:
 	
 	// 주문한 수량
 	UPROPERTY(VisibleInstanceOnly, Category = "AI Order")
-	int32 OrderedQuantity = 1;
+	int32 orderQuantity = 1;
 	
 	// 대사 데이터 테이블
 	UPROPERTY(EditAnywhere, Category = "AI Order")
@@ -148,5 +152,6 @@ public:
 	
 	UFUNCTION()
 	void MoveToTarget(const ATargetPoint* target);
-		
+	
+	void OnMoveToTargetCompleted(FAIRequestID id, const FPathFollowingResult& result);
 };

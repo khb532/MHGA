@@ -20,7 +20,12 @@ class MHGA_API UCustomerUI : public UUserWidget
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class ACustomerAI* ownerAI;
-	
+
+	// 텍스트 설정
 	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
 	void Event_SetOrderText(const FText& Dialogue);
+
+	// 텍스트 색상 설정
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void Event_SetTextColor(FLinearColor TextColor);
 };
