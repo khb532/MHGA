@@ -21,6 +21,8 @@ protected:
 	virtual void NativeConstruct() override;
 
 protected:
+	int32 SessionIdx = 0;
+	
 	UPROPERTY(meta=(BindWidget))
 	UButton* Btn_Session;
 
@@ -39,5 +41,5 @@ private:
 	
 public:
 	void SetImage();
-	void SetText(FString Name, int32 Current, int32 Max);
+	void Init(FString Name, int32 Current, int32 Max, int32 Idx);
 };

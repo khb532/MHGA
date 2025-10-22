@@ -1,4 +1,6 @@
 #include "MHGAGameInstance.h"
+
+#include "MHGA.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
@@ -37,7 +39,7 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	//세션 최대 참여 인원 설정
 	SessionSettings.NumPublicConnections = playerCount;
 	//커스텀 정보	- Key,Value값
-	SessionSettings.Set(FName("DP_NAME"), displayName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	SessionSettings.Set(FName("NAME"), displayName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	//sessionSettings 이용해서 세션 생성
 	FUniqueNetIdPtr netId = GetWorld()->GetFirstLocalPlayerFromController()->GetUniqueNetIdForPlatformUser().GetUniqueNetId();
@@ -51,7 +53,7 @@ void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSucc
 		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 성공"), *sessionName.ToString())
 
 		//레벨 이동 - 정확한 경로 적어야됨, 생성자에서 한 것처럼 하면 안됨
-		GetWorld()->ServerTravel(TEXT("/Game/ThirdPerson/Lvl_ThirdPerson"));
+		//GetWorld()->ServerTravel(TEXT("/Game/ThirdPerson/Lvl_ThirdPerson"));
 	}
 	else
 	{
@@ -86,13 +88,7 @@ void UMHGAGameInstance::OnFindSessionComplete(bool bWasSuccessful)
 	{
 		//검색된 세션 결과물
 		auto results = SessionSearch->SearchResults;
-		for (int32 i = 0; i < results.Num(); i++)
-		{
-			//세션 이름 담을 변수
-			FString displayName;
-			results[i].Session.SessionSettings.Get(FName("DP_NAME"), displayName);
-			UE_LOG(LogTemp, Warning, TEXT("세션 : %i, 이름 : %s"), i, *displayName)
-		}
+		FindCompleteDelegate.ExecuteIfBound(results);
 	}
 	else
 	{
@@ -110,7 +106,7 @@ void UMHGAGameInstance::JoinOtherSession(int32 sessionIdx)
 
 	//세션 이름
 	FString displayName;
-	results[sessionIdx].Session.SessionSettings.Get(FName("DP_NAME"), displayName);
+	results[sessionIdx].Session.SessionSettings.Get(FName("NAME"), displayName);
 	
 	//세션 참여
 	SessionInterface->JoinSession(0, FName(displayName), results[sessionIdx]);
@@ -118,6 +114,8 @@ void UMHGAGameInstance::JoinOtherSession(int32 sessionIdx)
 
 void UMHGAGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionCompleteResult::Type result)
 {
+	PRINTLOG(TEXT("Load Finish"));
+	
 	//참여에 성공 했다면
 	if (result == EOnJoinSessionCompleteResult::Success)
 	{
