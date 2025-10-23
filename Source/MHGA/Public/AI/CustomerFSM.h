@@ -6,7 +6,7 @@
 #include "BurgerData.h"
 #include "Components/ActorComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "OrderDialogue.h"
+#include "DialogueData.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "CustomerFSM.generated.h"
 
@@ -55,38 +55,37 @@ public:
 	// 손님의 현재 상태
 	UPROPERTY(EditAnywhere, Category = "AI State", ReplicatedUsing = OnRep_StateChange)
 	EAIState curState = EAIState::None;
-	
-	// 이 손님의 현재 성격
+	// 손님의 현재 성격
 	UPROPERTY(VisibleInstanceOnly, Category = "AI State")
 	ECustomerPersonality personality = ECustomerPersonality::Standard;
 
-	/** 주문 상태 진입 시 생성되어 저장되는 실제 대사입니다. UI는 이 변수를 읽습니다. */
+	// 대사 데이터 테이블
+	UPROPERTY(EditAnywhere, Category = "AI Dialogue")
+	UDataTable* MenuDialogueTable;
+	// 주문 상태 진입 시 생성되어 저장되는 실제 대사
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "AI Order", ReplicatedUsing = OnRep_Dialogue)
 	FText curDialogue;
-	
-	// UI가 이 변수를 쉽게 가져갈 수 있도록 Getter 함수를 하나 만듭니다.
+	// UI가 이 변수를 쉽게 가져갈 수 있도록 Getter 함수
 	UFUNCTION(BlueprintPure, Category = "AI | Dialogue")
 	FText GetCurrentDialogue() const { return curDialogue; }
-
 	UFUNCTION()
 	void OnRep_Dialogue();
-
-	UPROPERTY(EditAnywhere, Category = "AI State")
-	float maxWaitTime = 30.f;		// 최대 대기 시간
-	
-	float waitingTimer;		// 대기시간 측정 타이머
 	
 	// 주문한 메뉴
 	UPROPERTY(EditAnywhere, Category = "AI Order", Replicated, ReplicatedUsing = OnRep_Order)
 	EBurgerMenu orderedMenu;
-	
 	// 주문한 수량
 	UPROPERTY(VisibleInstanceOnly, Category = "AI Order")
 	int32 orderQuantity = 1;
-	
-	// 대사 데이터 테이블
+	// 주문 대기 시간
+	UPROPERTY(VisibleInstanceOnly, Category = "AI Order")
+	float maxOrderTime = 10.f;
+	float orderTimer = 0.f;
+	// 음식 대기 시간
 	UPROPERTY(EditAnywhere, Category = "AI Order")
-	UDataTable* MenuDialogueTable;
+	float maxWaitTime = 30.f;
+	float waitingTimer = 0.f;
+	
 
 	// == 위치정보 ==
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")

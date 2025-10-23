@@ -157,6 +157,7 @@ void ACustomerManager::UpdateWaitingPosition()
 				ACustomerAI* customerToMove = waitingCustomers[i];
 				if (customerToMove)
 				{
+					customerToMove->fsm->orderTarget = waitingPoints[i - 1];
 					// 해당 위치로 이동
 					customerToMove->fsm->MoveToTarget(waitingPoints[i-1]);
 				}
@@ -189,6 +190,7 @@ void ACustomerManager::CallNextCustomerFromWandering()
 			if (nextCustomer)
 			{
 				nextCustomer->fsm->MoveToTarget(waitingPoints[emptySpotIdx]);
+				nextCustomer->fsm->orderTarget = waitingPoints[emptySpotIdx];
 				nextCustomer->fsm->SetState(EAIState::GoingToLine);
 			}
 		}

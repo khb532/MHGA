@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "BurgerData.h"
+#include "MHGAGameMode.h"
 #include "public/AI/CustomerUI.h"
 #include "MHGAGameState.h"
 #include "NavigationSystem.h"
@@ -25,8 +26,6 @@ UCustomerFSM::UCustomerFSM()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	waitingTimer = 0.f;
 }
 
 // Called when the game starts
@@ -67,13 +66,30 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	if (!GetOwner()->HasAuthority()) return;
 	
 	// 지속되는 상태만 처리
+	if (curState == EAIState::Ordering)
+	{
+		orderTimer += DeltaTime;
+		if (orderTimer > maxOrderTime)
+		{
+			AMHGAGameMode* gm = GetWorld()->GetAuthGameMode<AMHGAGameMode>();
+			gm->ReportScoreChanged(EScoreChangeReason::SlowOrder, gm->penaltySlowOrder);
+
+			UE_LOG(LogTemp, Warning, TEXT("주문이 너무 오래걸려서 돌아갔습니다"));
+			me->ShowScoreFeedback(EScoreChangeReason::SlowOrder);
+			manager->OnCustomerFinished(me);
+			SetState(EAIState::Exit);
+		}
+	}
 	if (curState == EAIState::WaitingForFood)
 	{
 		waitingTimer += DeltaTime;
 		if (waitingTimer > maxWaitTime)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("너무 오래걸려서 돌아갔습니다"));
-			me->ShowReputationText(false);
+			AMHGAGameMode* gm = GetWorld()->GetAuthGameMode<AMHGAGameMode>();
+			gm->ReportScoreChanged(EScoreChangeReason::SlowCook, gm->penaltySlowCook);
+			
+			UE_LOG(LogTemp, Warning, TEXT("음식이 너무 오래걸려서 돌아갔습니다"));
+			me->ShowScoreFeedback(EScoreChangeReason::SlowCook);
 			SetState(EAIState::Exit);
 		}
 	}
@@ -116,8 +132,9 @@ void UCustomerFSM::SetState(EAIState NewState)
 
 void UCustomerFSM::OnRep_StateChange()
 {
+	// 클라이언트에서만 실행
 	if (GetOwner()->HasAuthority()) return;
-
+	// 상태 진입(동기화)
 	HandleStateEnter(curState);
 
 	if (me)
@@ -324,7 +341,7 @@ void UCustomerFSM::StartOrder()
 	orderQuantity = FMath::RandRange(1, 3);
 	UE_LOG(LogTemp, Error, TEXT("%s"), *curDialogue.ToString());
 	
-	me->ShowOrderUI();
+	// me->ShowOrderUI();
 }
 
 void UCustomerFSM::OnRep_Order()
@@ -437,11 +454,8 @@ void UCustomerFSM::WaitingForPickup()
 
 void UCustomerFSM::CheckAndTakeFood()
 {
-	if (!IsValid(MyPickupZone))
-	{
-		UE_LOG(LogTemp, Log, TEXT("몬진 모르겠는데 암튼 오류임"));
-	return;
-	}
+	if (!GetOwner() || !GetOwner()->HasAuthority()) return;
+	if (!IsValid(MyPickupZone)) return;
 
 	if (MyPickupZone->HasFood())
 	{
@@ -450,6 +464,7 @@ void UCustomerFSM::CheckAndTakeFood()
 		
 		if (IsValid(TakenHamburger))
 		{
+			AMHGAGameMode* gm = GetWorld()->GetAuthGameMode<AMHGAGameMode>();
 			// --- 1. 주문한 메뉴(enum)를 FString으로 변환 ---
 			FString OrderedMenuName;
 			UEnum* BurgerEnum = StaticEnum<EBurgerMenu>();
@@ -465,16 +480,18 @@ void UCustomerFSM::CheckAndTakeFood()
 			// --- 3. 두 FString을 비교 ---
 			if (OrderedMenuName == TakenBurgerName)
 			{
-				me->ShowReputationText(true);
+				// 평점 올리기
+				gm->ReportScoreChanged(EScoreChangeReason::CorrectFood, gm->bonusCorrectFood);
+				me->ShowScoreFeedback(EScoreChangeReason::CorrectFood);
 				UE_LOG(LogTemp, Log, TEXT("주문한 메뉴와 동일! 만족!"));
-				// TODO: 평점 올리는 로직
 				SetState(EAIState::Exit);
 			}
 			else
 			{
-				me->ShowReputationText(false);
+				// 평점 깎기
+				gm->ReportScoreChanged(EScoreChangeReason::WrongFood, gm->penaltyWrongFood);
+				me->ShowScoreFeedback(EScoreChangeReason::WrongFood);
 				UE_LOG(LogTemp, Warning, TEXT("다른 메뉴를 받음! 주문: %s, 받은 것: %s"), *OrderedMenuName, *TakenBurgerName);
-				// TODO: 평점 내리는 로직
 				SetState(EAIState::Exit);
 			}
 
@@ -519,7 +536,8 @@ void UCustomerFSM::OnMoveToTargetCompleted(FAIRequestID id, const FPathFollowing
 	if (curState != EAIState:: GoingToLine && curState != EAIState::WaitingInLine) return;
 
 	// 목적지 도착 성공시
-	if (result.Code == EPathFollowingResult::Success)
+	// if (result.Code == EPathFollowingResult::Success)
+	if (result.IsSuccess())
 	{
 		if (orderTarget && manager && orderTarget == manager->waitingPoints[0])
 		{

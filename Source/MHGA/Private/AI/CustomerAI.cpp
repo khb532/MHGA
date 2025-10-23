@@ -78,89 +78,159 @@ void ACustomerAI::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Ou
 	DOREPLIFETIME(ACustomerAI, customerWidget); 
 }
 
-FText ACustomerAI::GetOrderTextFromFSM()
+FText ACustomerAI::GetScoreDialogue(EScoreChangeReason reason)
 {
-	if (fsm)
-	{
-		return fsm->GetOrderedMenuAsText();
-	}
+	if (!scoreDialogueTable || !fsm) return FText::GetEmpty();
 
-	return NSLOCTEXT("BurgerMenu", "Shrimp", "없어요");
+	// reason 값을 FName RowName으로 변환
+	const UEnum* reasonEnum = StaticEnum<EScoreChangeReason>();
+	const FName rowName = FName(reasonEnum->GetNameStringByValue(static_cast<int64>(reason)));
+
+	// 데이터 테이블에서 해당 행 찾기
+	static const FString contextString(TEXT("GetScoreDialogue"));
+	FScoreDialogue* dialogueRow = scoreDialogueTable->FindRow<FScoreDialogue>(rowName, contextString);
+	if (!dialogueRow) return FText::GetEmpty();
+	
+	// 손님 성격에 따라 사용할 대사 선택
+	const TArray<FText>* variations = nullptr;
+	switch (fsm->personality)
+	{
+	case ECustomerPersonality::Standard:
+		{
+			variations = &dialogueRow->Standard_Variations;
+			break;
+		}
+	case ECustomerPersonality::Polite:
+		{
+			variations = &dialogueRow->Polite_Variations;
+			break;
+		}
+	case ECustomerPersonality::Impatient:
+		{
+			variations = &dialogueRow->Impatient_Variations;
+			break;
+		}
+	case ECustomerPersonality::Rude:
+		{
+			variations = &dialogueRow->Rude_Variations;
+			break;
+		}
+	default: variations = &dialogueRow->Standard_Variations; break;
+	}
+	if (!variations || variations->Num() == 0) return FText::GetEmpty();
+	
+	const int32 RandomIndex = FMath::RandRange(0, variations->Num() - 1);
+	return (*variations)[RandomIndex];
 }
 
 void ACustomerAI::ShowOrderUI()
 {
-	if (!fsm || !customerWidget) return;
-
-	// 위젯 컴포넌트를 보이게 설정 (서버에서 호출시 클라이언트에 복제됨)
-	customerWidget->SetVisibility(true);
-
-	// 보유중인 실제 위젯 가져오기
-	UUserWidget* widgetInst = customerWidget->GetUserWidgetObject();
-
-	// 위젯 초기화가 안되어있으면 실행
-	if (widgetInst == nullptr && customerWidget->GetWidgetClass())
+	UCustomerUI* customerUI = GetCustomerUIInstance();
+	if (fsm && customerUI)
 	{
-		customerWidget->InitWidget();
-		widgetInst = customerWidget->GetUserWidgetObject();
-	}
-
-	if (UCustomerUI* orderWidget = Cast<UCustomerUI>(widgetInst))
-	{
-		orderWidget->Event_SetOrderText(fsm->GetCurrentDialogue());
+		customerUI->Event_SetOrderText(fsm->curDialogue);
 	}
 }
 
 void ACustomerAI::HideOrderUI()
 {
-	if (customerWidget)
+	UCustomerUI* customerUI = GetCustomerUIInstance();
+	if (customerUI)
 	{
-		customerWidget->SetVisibility(false);
+		customerUI->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
-void ACustomerAI::ShowReputationText(bool bIsPositive)
+void ACustomerAI::ShowScoreFeedback(EScoreChangeReason reason)
 {
-	if (HasAuthority())
-	{
-		Multicast_ShowReputationText(bIsPositive);
-	}
+	if (!HasAuthority()) return;
+	Multicast_ShowScoreFeedback(reason);
 }
 
-void ACustomerAI::Multicast_ShowReputationText_Implementation(bool bIsPositive)
+void ACustomerAI::OnRep_FSMStateChanged()
 {
-	if (!customerWidget) return;
+	UCustomerUI* customerUI = GetCustomerUIInstance();
+	if (!fsm || !customerUI) return;
 
-	// 텍스트, 색상 변수
-	FText FeedbackText;
-	FLinearColor FeedbackColor;
-
-	if (bIsPositive)
+	if (fsm->curState == EAIState::Ordering)
 	{
-		FeedbackText = NSLOCTEXT("Feedback", "Good", ":)");
-		FeedbackColor = FLinearColor::White;
+		// 주문 상태면 주문 대사 표시 요청 (대사는 FSM의 OnRep_Dialogue에서 업데이트될 수 있음)
+		customerUI->Event_SetOrderText(fsm->curDialogue);
 	}
 	else
 	{
-		FeedbackText = NSLOCTEXT("Feedback", "Bad", ":(");
-		FeedbackColor = FLinearColor::Red;
+		// 주문 상태가 아니면 무조건 숨김
+		customerUI->SetVisibility(ESlateVisibility::Hidden);
 	}
-	// 컴포넌트가 가지고 있는 실제 위젯 가져오기
+}
+
+class UCustomerUI* ACustomerAI::GetCustomerUIInstance()
+{
+	if (!customerWidget) return nullptr;
+
 	UUserWidget* widgetInst = customerWidget->GetUserWidgetObject();
-	// 초기화 확인 로직
 	if (widgetInst == nullptr && customerWidget->GetWidgetClass())
 	{
 		customerWidget->InitWidget();
 		widgetInst = customerWidget->GetUserWidgetObject();
 	}
+	return Cast<UCustomerUI>(widgetInst);
+}
 
-	// 이벤트 호출
-	if (UCustomerUI* reputationUI = Cast<UCustomerUI>(widgetInst))
+// 모든 클라이언트에서 실행
+void ACustomerAI::Multicast_ShowScoreFeedback_Implementation(EScoreChangeReason reason)
+{
+	UCustomerUI* customerUI = GetCustomerUIInstance();
+	if (!customerUI) return;
+
+	// 클라이언트 각자 로컬에서 대사를 가져옵니다 (데이터 테이블은 보통 패키징됨).
+	// 만약 서버에서만 대사를 결정하고 싶다면, Multicast RPC에 FText와 FLinearColor를 직접 전달해야 합니다.
+	// 여기서는 클라이언트에서 대사를 찾는 방식을 사용합니다.
+	FText FeedbackDialogue = GetScoreDialogue(reason); // 클라이언트에서 실행되므로 fsm 데이터 필요
+	if (!FeedbackDialogue.IsEmpty())
 	{
-		reputationUI->Event_SetOrderText(FeedbackText);
-		reputationUI->Event_SetTextColor(FeedbackColor);
+		FLinearColor FeedbackColor = (reason == EScoreChangeReason::CorrectFood) ? FLinearColor::White : FLinearColor::Red;
+		customerUI->Event_SetOrderText(FeedbackDialogue);
+		customerUI->Event_SetTextColor(FeedbackColor);
 	}
+}
 
-	// 위젯 컴포넌트 보이게 설정
-	customerWidget->SetVisibility(true);
+
+
+
+void ACustomerAI::UpdateCustomerWidget(bool bShow, const FText& textToShow, FLinearColor textColor)
+{
+	if (!customerWidget) return;
+
+	// 위젯 표시/숨김 처리
+	customerWidget->SetVisibility(bShow);
+
+	// 위젯을 보여줘야하고, 텍스트 내용이 있다면 위젯 업데이트
+	if (bShow && !textToShow.IsEmpty())
+	{
+		// 실제 위젯 인스턴스 가져오고 초기화
+		UUserWidget* widgetInst = customerWidget->GetUserWidgetObject();
+		if (widgetInst == nullptr && customerWidget->GetWidgetClass())
+		{
+			customerWidget->InitWidget();
+			widgetInst = customerWidget->GetUserWidgetObject();
+		}
+
+		// 위젯 함수 호출하여 텍스트, 색상 설정
+		if (UCustomerUI* customerUI = Cast<UCustomerUI>(widgetInst))
+		{
+			customerUI->Event_SetOrderText(textToShow);
+			customerUI->Event_SetTextColor(textColor);
+
+			// TODO : 애니메이션 재생 호출
+		}
+		else if(widgetInst) // Cast 실패 시 로그
+		{
+			UE_LOG(LogTemp, Error, TEXT("UpdateCustomerWidget 실패: 위젯 인스턴스가 UCustomerUI 타입이 아닙니다! 클래스: %s"), *widgetInst->GetClass()->GetName());
+		}
+		else // 위젯 인스턴스 자체가 없을 때
+		{
+			UE_LOG(LogTemp, Error, TEXT("UpdateCustomerWidget 실패: 위젯 인스턴스를 가져오거나 초기화할 수 없습니다!"));
+		}
+	}
 }

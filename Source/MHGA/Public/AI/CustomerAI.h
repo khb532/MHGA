@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DialogueData.h"
 #include "GameFramework/Character.h"
 #include "CustomerAI.generated.h"
 
@@ -23,7 +24,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
@@ -33,27 +33,31 @@ public:
 	// 손님 머리 위에 텍스트 UI를 표시할 위젯 컴포넌트
 	UPROPERTY(VisibleAnywhere, Replicated, BlueprintReadOnly, Category = "UI")
 	class UWidgetComponent* customerWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI Dialogue")
+	class UDataTable* scoreDialogueTable;
 	
-	// FSM의 데이터를 대신 전달해주는 '대리인' 함수
-	UFUNCTION(BlueprintPure, Category = "AI Order")
-	FText GetOrderTextFromFSM();
-	
-	// // 에디터에서 지정할 위젯 블루프린트
-	// UPROPERTY(EditAnywhere, Category = "AI Order")
-	// TSubclassOf<UUserWidget> orderWidget;
-	// // 생성된 위젯의 인스턴스를 저장할 변수
-	// UPROPERTY(EditAnywhere, Category = "AI Order")
-	// TObjectPtr<UUserWidget> orderWidgetInst;
-	// UI 표시하기 / 숨기기
 	UFUNCTION(BlueprintCallable, Category = "AI Order")
 	void ShowOrderUI();
 	UFUNCTION(BlueprintCallable, Category = "AI Order")
 	void HideOrderUI();
+
+	// 대사 가져오기
+	FText GetScoreDialogue(EScoreChangeReason reason);
 	
-	// 메뉴 판단후 손님 상단 UI 표시 함수
-	UFUNCTION(BlueprintCallable, Category = "AI Order")
-	void ShowReputationText(bool bIsPositive);
+	// 평점 변경 사유에 따른 대사 표시 함수
+	void ShowScoreFeedback(EScoreChangeReason reason);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_ShowReputationText(bool bIsPositive);
+	void Multicast_ShowScoreFeedback(EScoreChangeReason reason);
+
+	// --- Replication Callbacks ---
+	UFUNCTION()
+	void OnRep_FSMStateChanged();
+    
+	/** 실제 위젯 인스턴스를 가져옵니다 (필요시 초기화 포함). */
+	class UCustomerUI* GetCustomerUIInstance();
+
 	
+
+	void UpdateCustomerWidget(bool bShow, const FText& textToShow, FLinearColor textColor);
 };
