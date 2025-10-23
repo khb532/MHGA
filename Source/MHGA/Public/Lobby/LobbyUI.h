@@ -33,6 +33,20 @@ protected:
 	UPROPERTY(meta=(BindWidget))
 	UButton* BTN_Run;
 
+	UPROPERTY()
+	TArray<UTextBlock*> PlayerArr;
+	UPROPERTY()
+	TArray<UTextBlock*> ReadyArr;
+
+	int32 PlayerCount;
+	TArray<bool> IsPlayerReady;
+
 public:
 	void Init(ALobbyBoard* InLobbyBoard);
+	UFUNCTION() void OnClickReady();
+	UFUNCTION() void OnClickRun();
+	
+	UFUNCTION() void Ready(int32 PlayerNum);
+	UFUNCTION() void Run();
+	UFUNCTION() void Refresh(int32 PlayerNum);
 };

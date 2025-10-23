@@ -30,5 +30,11 @@ protected:
 	ULobbyUI* LobbyUI;
 
 public:
-	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_Ready(int32 PlayerNum);
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_Run();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_Refresh(int32 PlayerNum);
 };

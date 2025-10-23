@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MHGAPlayerController.generated.h"
 
+class ALobbyBoard;
 class ACounterPOS;
 class UInputMappingContext;
 
@@ -31,7 +32,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	ACounterPOS* CounterPos;
 
+	//Lobby
+	UPROPERTY(EditAnywhere)
+	ALobbyBoard* LobbyBoard;
+
 public:
+	//In Game CounterPos
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_OnClickCustomerBtn();
 	UFUNCTION(Server, Reliable)
@@ -46,4 +52,11 @@ public:
 	void ServerRPC_AddMenuToList(const EBurgerMenu MenuName);
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_CustomerOrderedMenu(int32 CustomerNum);
+
+	//Lobby
+	void SetLobbyBoard(ALobbyBoard* InLobbyBoard) {LobbyBoard = InLobbyBoard;}
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Ready(int32 PlayerNum);
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Run();
 };

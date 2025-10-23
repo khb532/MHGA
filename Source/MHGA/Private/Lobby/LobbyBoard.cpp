@@ -1,7 +1,9 @@
 #include "Lobby/LobbyBoard.h"
 
+#include "LobbyGameMode.h"
 #include "Components/WidgetComponent.h"
 #include "Lobby/LobbyUI.h"
+#include "Player/MHGAPlayerController.h"
 
 ALobbyBoard::ALobbyBoard()
 {
@@ -37,6 +39,12 @@ void ALobbyBoard::BeginPlay()
 	LobbyUI = Cast<ULobbyUI>(WidgetComponent->GetWidget());
 	if (LobbyUI)
 		LobbyUI->Init(this);
+	
+	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
+	pc->SetLobbyBoard(this);
+	ALobbyGameMode* gm = Cast<ALobbyGameMode>(GetWorld()->GetAuthGameMode());
+	if (gm)
+		gm->SetLobbyBoard(this);
 }
 
 void ALobbyBoard::Tick(float DeltaTime)
@@ -44,3 +52,18 @@ void ALobbyBoard::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+
+void ALobbyBoard::MulticastRPC_Ready_Implementation(int32 PlayerNum)
+{
+	LobbyUI->Ready(PlayerNum);
+}
+
+void ALobbyBoard::MulticastRPC_Run_Implementation()
+{
+	LobbyUI->Run();
+}
+
+void ALobbyBoard::MulticastRPC_Refresh_Implementation(int32 PlayerNum)
+{
+	LobbyUI->Refresh(PlayerNum);
+}

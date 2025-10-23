@@ -92,7 +92,8 @@ void UMHGAGameInstance::OnFindSessionComplete(bool bWasSuccessful)
 	}
 	else
 	{
-	UE_LOG(LogTemp, Warning, TEXT("세션 조회 실패"));
+		UE_LOG(LogTemp, Warning, TEXT("세션 조회 실패"));
+		FindCompleteDelegate.ExecuteIfBound(SessionSearch->SearchResults);
 	}
 }
 
