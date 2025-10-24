@@ -7,6 +7,19 @@
 #include "GameFramework/Character.h"
 #include "CustomerAI.generated.h"
 
+// 손님의 외형 구조체 (메쉬 + 애님BP)
+USTRUCT(BlueprintType)
+struct FCustomerVisuals
+{
+	GENERATED_BODY()
+	// 메쉬
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visuals")
+	class USkeletalMesh* customerMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visuals")
+	TSubclassOf<class UAnimInstance> customerAnim;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Visuals")
+	FVector RelativeScale = FVector(1.0f); // ★★★ 스케일 변수 추가 ★★★
+};
 
 UCLASS()
 class MHGA_API ACustomerAI : public ACharacter
@@ -27,6 +40,15 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+	// 일반 손님용 무작위 비주얼셋
+	UPROPERTY(EditAnywhere)
+	TArray<FCustomerVisuals> regularVisuals;
+	UPROPERTY(EditAnywhere)
+	FCustomerVisuals specialVisual;
+
+	void UpdateVisuals(int32 meshIdx);
+
+	
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadOnly)
 	class UCustomerFSM* fsm;
 	

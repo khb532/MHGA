@@ -33,17 +33,55 @@ void UCustomerFSM::BeginPlay()
 {
 	Super::BeginPlay();
 	me = Cast<ACustomerAI>(GetOwner());
-	manager = Cast<ACustomerManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACustomerManager::StaticClass()));
 	AIController = Cast<AAIController>(me->GetController());
-
-	// ★★★ 핵심 수정: BeginPlay에서 픽업 존을 직접 찾아 저장합니다 ★★★
+	manager = Cast<ACustomerManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACustomerManager::StaticClass()));
 	MyPickupZone = Cast<APickupZone>(UGameplayStatics::GetActorOfClass(GetWorld(), APickupZone::StaticClass()));
 	if (MyPickupZone == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("FSM이 레벨에서 PickupZone을 찾을 수 없습니다!"));
 	}
 
-	personality = static_cast<ECustomerPersonality>(FMath::RandRange(0, 3));
+	if (GetOwner()->HasAuthority())
+	{
+		// 1. 특별 손님 여부 결정
+		if (FMath::FRand() < SpecialCustomerChance)
+		{
+			// --- 특별 손님 ---
+			personality = ECustomerPersonality::Special_VIP;
+			SelectedMeshIndex = -1; // -1은 특별 손님 메쉬를 의미
+		}
+		else
+		{
+			// --- 일반 손님 ---
+            
+			// A. 성격 랜덤 결정 (Special_VIP 제외)
+			int32 NumRegularPersonalities = static_cast<int32>(ECustomerPersonality::Special_VIP);
+			personality = static_cast<ECustomerPersonality>(FMath::RandRange(0, NumRegularPersonalities - 1));
+
+			// B. 메쉬 랜덤 결정 (AI의 배열 사용)
+			if (me && me->regularVisuals.Num() > 0)
+			{
+				SelectedMeshIndex = FMath::RandRange(0, me->regularVisuals.Num() - 1);
+			}
+			else
+			{
+				SelectedMeshIndex = 0; // 혹시 모를 폴백
+				if(me && me->regularVisuals.Num() == 0)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("FSM BeginPlay: ACustomerAI의 RegularCustomerMeshes 배열이 비어있습니다!"));
+				}
+			}
+		}
+
+		// ★★★ 중요: OnRep은 서버에서 호출되지 않으므로,
+		// 서버의 AI(몸)도 직접 메쉬를 업데이트해줘야 합니다.
+		if (me)
+		{
+			me->UpdateVisuals(SelectedMeshIndex);
+		}
+	}
+	
+	// personality = static_cast<ECustomerPersonality>(FMath::RandRange(0, 3));
 	EnterStore();
 	
 }
@@ -56,6 +94,9 @@ void UCustomerFSM::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& O
 	DOREPLIFETIME(UCustomerFSM, curState);
 	DOREPLIFETIME(UCustomerFSM, orderedMenu);
 	DOREPLIFETIME(UCustomerFSM, curDialogue);
+
+	DOREPLIFETIME(UCustomerFSM, personality);
+	DOREPLIFETIME(UCustomerFSM, SelectedMeshIndex);
 }
 
 // Called every frame
@@ -115,6 +156,14 @@ void UCustomerFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	}
 	
 }
+
+
+
+void UCustomerFSM::OnRep_MeshIndex()
+{
+	me->UpdateVisuals(SelectedMeshIndex);
+}
+
 
 
 void UCustomerFSM::SetState(EAIState NewState)
@@ -481,6 +530,7 @@ void UCustomerFSM::CheckAndTakeFood()
 				gm->ReportScoreChanged(EScoreChangeReason::CorrectFood, gm->bonusCorrectFood);
 				me->ShowScoreFeedback(EScoreChangeReason::CorrectFood);
 				UE_LOG(LogTemp, Log, TEXT("주문한 메뉴와 동일! 만족!"));
+				manager->OnCustomerFinished(me);
 				SetState(EAIState::Exit);
 			}
 			else
@@ -489,6 +539,7 @@ void UCustomerFSM::CheckAndTakeFood()
 				gm->ReportScoreChanged(EScoreChangeReason::WrongFood, gm->penaltyWrongFood);
 				me->ShowScoreFeedback(EScoreChangeReason::WrongFood);
 				UE_LOG(LogTemp, Warning, TEXT("다른 메뉴를 받음! 주문: %s, 받은 것: %s"), *OrderedMenuName, *TakenBurgerName);
+				manager->OnCustomerFinished(me);
 				SetState(EAIState::Exit);
 			}
 

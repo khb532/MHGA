@@ -13,7 +13,8 @@ enum class ECustomerPersonality : uint8
 	Standard	UMETA(DisplayName = "표준"),
 	Polite		UMETA(DisplayName = "공손함"),
 	Rude		UMETA(DisplayName = "무례함"),
-	Impatient	UMETA(DisplayName = "급함")
+	Impatient	UMETA(DisplayName = "급함"),
+	Special_VIP	UMETA(DisplayName = "매그너스")
 };
 
 // 평점 변경 사유

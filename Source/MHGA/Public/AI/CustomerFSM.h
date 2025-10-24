@@ -56,9 +56,27 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI State", ReplicatedUsing = OnRep_StateChange)
 	EAIState curState = EAIState::None;
 	// 손님의 현재 성격
-	UPROPERTY(VisibleInstanceOnly, Category = "AI State")
+	UPROPERTY(VisibleInstanceOnly, Category = "AI State", Replicated)
 	ECustomerPersonality personality = ECustomerPersonality::Standard;
 
+
+
+	
+	/** 특별 손님이 등장할 확률 (0.0 ~ 1.0 사이 값) */
+	UPROPERTY(EditDefaultsOnly, Category = "AI State", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float SpecialCustomerChance = 0.05f; // 기본값 5%
+	/**
+	 * 선택된 메쉬 인덱스. -1 = 특별 손님, 0+ = 일반 손님 메쉬 배열 인덱스
+	 * 클라이언트는 이 값을 복제받아 AI(몸)의 메쉬를 갱신합니다.
+	 */
+	UPROPERTY(VisibleInstanceOnly, Category = "AI Visuals", ReplicatedUsing = OnRep_MeshIndex)
+	int32 SelectedMeshIndex = 0;
+	UFUNCTION()
+	void OnRep_MeshIndex();
+	
+
+
+	
 	void SetState(EAIState NewState);
 	UFUNCTION()
 	void OnRep_StateChange();
@@ -91,7 +109,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI Order")
 	float maxWaitTime = 30.f;
 	float waitingTimer = 0.f;
-	
 
 	// == 위치정보 ==
 	UPROPERTY(EditAnywhere, Category = "AI Navigation")
