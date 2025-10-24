@@ -6,6 +6,7 @@
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
+#include "Kismet/GameplayStatics.h"
 #include "Online/OnlineSessionNames.h"
 
 void UMHGAGameInstance::Init()
@@ -49,22 +50,6 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	SessionInterface->CreateSession(*netId, FName(displayName), SessionSettings);
 }
 
-void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSuccessful)
-{
-	if (bWasSuccessful)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 성공"), *sessionName.ToString())
-
-		//레벨 이동 - 정확한 경로 적어야됨, 생성자에서 한 것처럼 하면 안됨
-		FString TravelURL = FString::Printf(TEXT("/Game/Maps/Lobby?listen?Nick=%s"), *NickName);
-		GetWorld()->ServerTravel(TravelURL);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 실패"), *sessionName.ToString())
-	}
-}
-
 void UMHGAGameInstance::FindOtherSession()
 {
 	UE_LOG(LogTemp, Warning, TEXT("세션 조회 시작"));
@@ -85,22 +70,6 @@ void UMHGAGameInstance::FindOtherSession()
 	SessionInterface->FindSessions(0,SessionSearch.ToSharedRef());
 }
 
-void UMHGAGameInstance::OnFindSessionComplete(bool bWasSuccessful)
-{
-	UE_LOG(LogTemp, Warning, TEXT("세션 조회 완료"));
-	if (bWasSuccessful)
-	{
-		//검색된 세션 결과물
-		auto results = SessionSearch->SearchResults;
-		FindCompleteDelegate.ExecuteIfBound(results);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("세션 조회 실패"));
-		FindCompleteDelegate.ExecuteIfBound(SessionSearch->SearchResults);
-	}
-}
-
 void UMHGAGameInstance::JoinOtherSession(int32 sessionIdx)
 {
 	//검색된 세션 결과물
@@ -115,6 +84,38 @@ void UMHGAGameInstance::JoinOtherSession(int32 sessionIdx)
 	
 	//세션 참여
 	SessionInterface->JoinSession(0, FName(displayName), results[sessionIdx]);
+}
+
+void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 성공"), *sessionName.ToString())
+
+		//레벨 이동 - 정확한 경로 적어야됨, 생성자에서 한 것처럼 하면 안됨
+		FString TravelURL = FString::Printf(TEXT("/Game/Maps/Lobby?listen?Nick=%s"), *NickName);
+		GetWorld()->ServerTravel(TravelURL);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 실패"), *sessionName.ToString())
+	}
+}
+
+void UMHGAGameInstance::OnFindSessionComplete(bool bWasSuccessful)
+{
+	UE_LOG(LogTemp, Warning, TEXT("세션 조회 완료"));
+	if (bWasSuccessful)
+	{
+		//검색된 세션 결과물
+		auto results = SessionSearch->SearchResults;
+		FindCompleteDelegate.ExecuteIfBound(results);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("세션 조회 실패"));
+		FindCompleteDelegate.ExecuteIfBound(SessionSearch->SearchResults);
+	}
 }
 
 void UMHGAGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionCompleteResult::Type result)

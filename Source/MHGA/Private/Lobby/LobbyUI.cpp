@@ -10,6 +10,8 @@
 #include "GameFramework/GameStateBase.h"
 #include "Lobby/BoardText.h"
 #include "Lobby/LobbyBoard.h"
+#include "MHGAGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/MHGAPlayerController.h"
 
 void ULobbyUI::NativeConstruct()
@@ -50,8 +52,12 @@ void ULobbyUI::OnClickReady()
 
 void ULobbyUI::OnClickRun()
 {
-	AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(GetWorld()->GetFirstPlayerController());
-	pc->ServerRPC_Run();
+	BTN_Run->SetIsEnabled(false);
+
+	if (UMHGAGameInstance* GI = GetWorld()->GetGameInstance<UMHGAGameInstance>())
+	{
+
+	}
 }
 
 void ULobbyUI::Ready(int32 PlayerNum)
@@ -69,6 +75,9 @@ void ULobbyUI::Run()
 
 void ULobbyUI::Refresh(TArray<FString>& Names)
 {
+	if (GetWorld()->bIsTearingDown)
+		return;
+	
 	VB_Player->ClearChildren();
 	VB_Ready->ClearChildren();
 
