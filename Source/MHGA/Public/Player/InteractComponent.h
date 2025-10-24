@@ -39,6 +39,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grab")
 	float GrabRadius = 20.f; // 구체 트레이스 반경
 
+	/* dove */
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UStaticMeshComponent> m_preview_mesh;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grab")
 	bool bIsGrabbed = false;
