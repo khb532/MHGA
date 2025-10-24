@@ -14,18 +14,26 @@ class MHGA_API AHamburger : public AActor, public IGrabableProps
 public:
 	AHamburger();
 
-	virtual void Tick(float DeltaTime) override;
+	void OnGrabbed(AMHGACharacter* Player) override {}
+	void OnPut() override	{}
+	void OnUse() override	{}
 
-	virtual void OnGrabbed(AMHGACharacter* Player) override;
-	virtual void OnPut() override;
-	virtual void OnUse() override;
 	virtual void SetLocation(FVector Loc) override;
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetName(const FString& Name);
+	
 	void SetName(FString Name);
+
+	FString GetBurgerName();
+
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
+	
 private:
 	void PrintLog();
 
@@ -34,15 +42,14 @@ private:
 /* Field */
 public:
 	UPROPERTY(VisibleAnywhere)
-	class UStaticMeshComponent* Mesh;
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
 	UPROPERTY(EditAnywhere)
 	bool bShowLog = true;
-private:
-	FString BurgerName;
 
-	// 황규환이 추가함 햄버거 이름 받아오기용 함수
-public:
-	FString GetBurgerName();
+	
+private:
+	UPROPERTY(Replicated)
+	FString BurgerName;
 	
 };

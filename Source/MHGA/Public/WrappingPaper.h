@@ -14,13 +14,19 @@ class MHGA_API AWrappingPaper : public AActor
 public:
 	AWrappingPaper();
 
-	UFUNCTION()
+	// TODO(human): Listen 서버 멀티플레이 구현
+	// 고려사항: 서버만 게임 로직 실행(Authority), 클라이언트는 서버에 요청(RPC), 상태는 자동 동기화(Replication)
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION(Server, Reliable)
 	void AddIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
-	UFUNCTION()
-	void MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION(Server, Reliable)
+	void RemoveIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	
 
 	// 포장 시도
+	UFUNCTION(Server, Reliable)
 	void TryWrap();
 	
 	// 레시피 매칭 결과로 햄버거를 스폰하고 포장지를 정리한다.
@@ -47,6 +53,9 @@ private:
 	void DestroyIngredients();
 
 	void PrintLog();
+
+	UFUNCTION()
+	void OnRep_AddIng();
 	
 /* Field */
 public:
@@ -69,10 +78,10 @@ protected:
 
 
 private:
-	UPROPERTY()	// 충돌한 재료 저장
+	UPROPERTY(ReplicatedUsing=OnRep_AddIng)	// 충돌한 재료 저장
 	TArray<FIngredientStack> OnAreaIngredients;
 
-	UPROPERTY()	// 완료 시 제거할 액터 추적
+	UPROPERTY()		// 완료 시 제거할 액터 추적
 	TArray<TWeakObjectPtr<AActor>> OverlappingActors;
 
 	

@@ -1,9 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Ingredient/IngredientBase.h"
-
 #include "MHGA.h"
+#include "Net/UnrealNetwork.h"
 #include "Player/InteractComponent.h"
 #include "Player/MHGACharacter.h"
 
@@ -36,6 +33,13 @@ void AIngredientBase::BeginPlay()
 void AIngredientBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AIngredientBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AIngredientBase, IngType);
 }
 
 

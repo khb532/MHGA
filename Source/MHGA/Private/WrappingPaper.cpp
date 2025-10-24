@@ -3,17 +3,29 @@
 #include "MHGA.h"
 #include "Components/BoxComponent.h"
 #include "Ingredient/IngredientBase.h"
+#include "Net/UnrealNetwork.h"
 
 
 AWrappingPaper::AWrappingPaper()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	// TODO(human): 이 액터가 네트워크를 통해 복제되도록 설정
+	// 고려사항: 모든 클라이언트가 이 액터를 보고 상호작용해야 함
+	bReplicates = true;
+
 	Collision = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	SetRootComponent(Collision);
-	
+
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
+}
+
+void AWrappingPaper::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWrappingPaper, OnAreaIngredients);
 }
 
 void AWrappingPaper::BeginPlay()
@@ -23,7 +35,7 @@ void AWrappingPaper::BeginPlay()
 	Collision->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 	Collision->OnComponentBeginOverlap.AddDynamic(this, &AWrappingPaper::AddIngredient);
 
-	Collision->OnComponentEndOverlap.AddDynamic(this, &AWrappingPaper::MinusIngredient);
+	Collision->OnComponentEndOverlap.AddDynamic(this, &AWrappingPaper::RemoveIngredient);
 	
 }
 
@@ -42,12 +54,16 @@ void AWrappingPaper::Tick(float DeltaTime)
 	}
 }
 
-void AWrappingPaper::AddIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void AWrappingPaper::AddIngredient_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	// TODO(human): 이 함수가 서버에서만 실행되도록 보장
+	// 고려사항: 클라이언트에서 실행되면 재료가 중복 추가될 수 있음
+	if (!HasAuthority()) return;
+	
 	// On Overlap
 	if (bShowLog)
 		GEngine->AddOnScreenDebugMessage(1, 2.f, FColor::Yellow, "On Overlapped & AddIngredient");
-	
+
 	if (OtherActor == nullptr || OtherActor == this) return;
 
 	OverlappingActors.AddUnique(OtherActor);
@@ -90,13 +106,17 @@ void AWrappingPaper::AddIngredient(UPrimitiveComponent* OverlappedComponent, AAc
 	}
 }
 
-void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AWrappingPaper::RemoveIngredient_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	// TODO(human): 이 함수도 서버에서만 실행되도록 보장
+	// 고려사항: AddIngredient와 동일한 패턴 적용
+	if (!HasAuthority()) return;
+
 	// OFF Overlap
 	if (bShowLog)
 		GEngine->AddOnScreenDebugMessage(2, 2.f, FColor::Red, "Off Overlapped & MinusIngredient");
-	
-	 // 1. Collide Out, if(Not Ingredient OR self) return
+
+	 // 1. Collide Out, if(self) return
 	if (OtherActor == nullptr || OtherActor == this) return;
 
 	for (int32 i = OverlappingActors.Num() - 1; i >= 0; --i)
@@ -106,22 +126,20 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 			OverlappingActors.RemoveAt(i);
 		}
 	}
-
-	AIngredientBase* Ingredient = Cast<AIngredientBase>(OtherActor);
-	if (Ingredient == nullptr) return;
-
-	bool hasNotFound = true;
 	
-	if (Ingredient->GetIngType() == EIngredient::None) 
+	bool hasNotFound = true;
+	AIngredientBase* Ingredient = Cast<AIngredientBase>(OtherActor);
+	
+	if (Ingredient == nullptr) 
 	{
 		for (int32 i = 0 ; i < OnAreaIngredients.Num(); i++)
 		{
 			if (OnAreaIngredients[i].IngredientId == EIngredient::None)
 			{
+				hasNotFound = false;
 				--OnAreaIngredients[i].Quantity;
 				if (OnAreaIngredients[i].Quantity <= 0)
 					OnAreaIngredients.RemoveAt(i);
-				hasNotFound = false;
 				break;
 			}
 		}
@@ -133,10 +151,10 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 		{
 			if (OnAreaIngredients[i].IngredientId == Ingredient->GetIngType())
 			{
-				// 3. Found. Quantity - 1
-				--OnAreaIngredients[i].Quantity;
 				hasNotFound = false;
+				// 3. Found. Quantity - 1
 				// 4. Quantity <= 0, RemoveAt
+				--OnAreaIngredients[i].Quantity;
 				if (OnAreaIngredients[i].Quantity <= 0)
 					OnAreaIngredients.RemoveAt(i);
 				break;
@@ -151,9 +169,23 @@ void AWrappingPaper::MinusIngredient(UPrimitiveComponent* OverlappedComponent, A
 	
 }
 
+void AWrappingPaper::TryWrap_Implementation()
+{
+	// TODO(human): TryWrap을 서버 RPC로 변경
+	// 고려사항: 클라이언트가 포장 버튼을 누르면 서버에 요청, 서버가 실제 포장 처리
+	if (HasAuthority())
+	{
+		if (HasBreadPair() && HasExtraIngredient())
+		{
+			PRINTLOG(TEXT("TryWrap Not Problem"))
+			CompleteWrapping();
+		}
+	}
+	
+}
+
 void AWrappingPaper::PrintLog()
 {
-	
 	FString ActorName = this->GetActorNameOrLabel();
 	const UEnum* IngEnum = StaticEnum<EIngredient>();
 	if (IngEnum == nullptr) return;
@@ -167,6 +199,11 @@ void AWrappingPaper::PrintLog()
 	}
 	
 	DrawDebugString(GetWorld(), GetActorLocation(), Str, nullptr, FColor::Yellow, 0);
+}
+
+void AWrappingPaper::OnRep_AddIng()
+{
+	
 }
 
 TMap<EIngredient, int32> AWrappingPaper::MakeMapFromArray(const TArray<FIngredientStack>& InArray)
@@ -217,19 +254,9 @@ EBurgerMenu AWrappingPaper::FindMatchingRecipe(UDataTable* DT, const TArray<FIng
 	return EBurgerMenu::WrongBurger;
 }
 
-void AWrappingPaper::TryWrap()
-{
-	// TODO: AddIngredient 처리 직후 호출된다; 방금 추가된 재료가 빵일 때만 호출되도록 AddIngredient에서 제어한다.
-	// TODO: HasBreadPair()로 Top/Bottom Bread가 모두 존재하는지 확인한다.
-	// TODO: HasExtraIngredient()로 빵 이외 재료가 있는지 점검한다.
-	// TODO: 두 조건이 모두 true일 때 CompleteWrapping()을 호출한다.
-	if (HasBreadPair() && HasExtraIngredient())
-		CompleteWrapping();
-}
-
 bool AWrappingPaper::HasBreadPair() const
 {
-	// TODO: OnAreaIngredients 배열을 순회하며 BottomBread와 TopBread 수량을 각각 추적한다.
+	// OnAreaIngredients 배열을 순회하며 BottomBread와 TopBread 수량을 각각 추적한다.
 	int32 Q_TBread = 0, Q_BBread = 0;
 
 	for (const FIngredientStack& tmp : OnAreaIngredients)
@@ -244,28 +271,41 @@ bool AWrappingPaper::HasBreadPair() const
 		}
 	}
 	
-	// TODO: 두 빵의 수량이 모두 1 이상이면 true를 반환하고, 그렇지 않으면 false를 반환한다.
+	// 두 빵의 수량이 모두 1 이상이면 true를 반환하고, 그렇지 않으면 false를 반환한다.
+	if (Q_TBread >= 1 && Q_BBread >= 1)
+	{
+		PRINTLOG(TEXT("Bread is TRUE"))
+	}
+	else
+	{
+		PRINTLOG(TEXT("Bread is FALSE"))
+	}
 	return Q_TBread >= 1 && Q_BBread >= 1;
 }
 
 bool AWrappingPaper::HasExtraIngredient() const
 {
-	// TODO: OnAreaIngredients 배열에서 빵 이외 재료들의 총 수량을 누적한다.
-	int32 count = 0;
 	for (const FIngredientStack& tmp : OnAreaIngredients)
 	{
 		if (!(tmp.IngredientId == EIngredient::BottomBread || tmp.IngredientId == EIngredient::TopBread))
-			count++;
+		{
+			PRINTLOG(TEXT("Extra is TRUE"))
+			return true;
+		}
 	}
-	// TODO: 누적된 수량이 1 이상이면 true, 그렇지 않으면 false를 반환한다.
-	return count > 0 ? true : false;
+	PRINTLOG(TEXT("Extra is FALSE"))
+	return false;
 }
 
 void AWrappingPaper::CompleteWrapping()
 {
-	// TODO: BurgerDataTable과 CompletedBurgerClass가 설정되어 있는지 확인한다.
+	// TODO(human): 이 함수가 서버에서만 실행되도록 보장
+	// 고려사항: 햄버거 스폰은 서버만 수행, 클라이언트는 자동으로 복제된 햄버거를 봄
+	if (!HasAuthority()) return;
+	PRINTLOG(TEXT("CompleteWrap Not Problem"))
+	// BurgerDataTable과 CompletedBurgerClass가 설정되어 있는지 확인한다.
 	if (!(BurgerDataTable && BurgerClass)) return;
-	// TODO: FindMatchingRecipe를 호출해 현재 재료 조합에 대응되는 EBurgerMenu를 얻는다.
+	// FindMatchingRecipe를 호출해 현재 재료 조합에 대응되는 EBurgerMenu를 얻는다.
 	EBurgerMenu CreatedBurgerName = FindMatchingRecipe(BurgerDataTable, OnAreaIngredients);
 	const UEnum* BurgerEnum = StaticEnum<EBurgerMenu>();
 	FString Str = BurgerEnum->GetNameStringByValue(static_cast<int64>(CreatedBurgerName));
@@ -275,18 +315,18 @@ void AWrappingPaper::CompleteWrapping()
 	
 	DestroyIngredients();
 	
-	// TODO: CompletedBurgerClass를 SpawnActor하여 햄버거 액터를 생성한다.
+	// CompletedBurgerClass를 SpawnActor하여 햄버거 액터를 생성한다.
 	AHamburger* SpawnedBurger = GetWorld()->SpawnActor<AHamburger>(BurgerClass, this->GetActorTransform());
-	// TODO: SpawnedBurger->SetMenu()
+	// SpawnedBurger->SetMenu()
 	SpawnedBurger->SetName(Str);
-	// TODO: DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
+	// DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
 }
 
 void AWrappingPaper::DestroyIngredients()
 {
-	// TODO: OverlappingActors에 저장된 액터 포인터를 순회하며 Destroy를 호출한다.
+	// OverlappingActors에 저장된 액터 포인터를 순회하며 Destroy를 호출한다.
 	TArray<TWeakObjectPtr<AActor>> ActorsToDestroy = OverlappingActors;
-	// TODO: OnAreaIngredients와 OverlappingActors를 비워 다음 사용에 대비한다.
+	// OnAreaIngredients와 OverlappingActors를 비워 다음 사용에 대비한다.
 	OverlappingActors.Empty();
 	OnAreaIngredients.Empty();
 
@@ -297,6 +337,6 @@ void AWrappingPaper::DestroyIngredients()
 			Actor->Destroy();
 		}
 	}
-	// TODO: WrappingPaper 자신도 Destroy하여 포장 과정을 마무리한다.
+	// WrappingPaper 자신도 Destroy하여 포장 과정을 마무리한다.
 	Destroy();
 }

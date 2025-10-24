@@ -1,18 +1,20 @@
-
 #include "Ingredient/Patty.h"
+#include "Net/UnrealNetwork.h"
 
 
-// Sets default values
 APatty::APatty()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	IngType = EIngredient::Patty;
+	bReplicates = true;
+	IngType = EIngredient::RawPatty;
+	CookState = EPattyCookState::Raw;
 }
 
 void APatty::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
 }
 
@@ -21,13 +23,80 @@ void APatty::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void APatty::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APatty, CookState);
+}
+
 EPattyCookState APatty::GetCookState() const
 {
 	return CookState;
 }
 
-void APatty::SetCookState(EPattyCookState NewState)
+void APatty::ServerSetCookState_Implementation(const EPattyCookState NewState)
 {
 	CookState = NewState;
-	// TODO : 패티의 상태에 따라 추가 효과 넣기(연기 등)
+	
+	if ( CookState == EPattyCookState::Cooked )
+		IngType = EIngredient::WellDonePatty;
+	
+	if ( CookState == EPattyCookState::Overcooked )
+		IngType = EIngredient::OvercookedPatty;
+
+	OnRep_CookState();
+}
+
+void APatty::SetCookState(const EPattyCookState NewState)
+{
+	if (HasAuthority())
+	{
+		ServerSetCookState_Implementation(NewState);
+	}
+	else
+	{
+		ServerSetCookState(NewState);
+	}
+}
+
+void APatty::OnRep_CookState()
+{
+	UpdateMaterial();
+}
+
+void APatty::UpdateMaterial()
+{
+	TObjectPtr<UStaticMeshComponent> pMesh = GetMeshComp();
+	bool bShouldChangeMat = false;
+	FLinearColor newcolor;
+	if (pMesh != nullptr)
+	{
+		switch (CookState)
+		{
+		case EPattyCookState::Raw:
+			bShouldChangeMat = false;
+			break;
+
+		case EPattyCookState::Cooked:
+			bShouldChangeMat = true;
+			newcolor = FLinearColor::Red;
+			break;
+
+		case EPattyCookState::Overcooked:
+			bShouldChangeMat = true;
+			newcolor = FLinearColor::Black;
+			break;
+		}
+
+		if (!bShouldChangeMat) return;
+		UMaterialInstanceDynamic* DynamicMaterial =
+		 UMaterialInstanceDynamic::Create(pMesh->GetMaterial(0), this);
+
+		if (!DynamicMaterial) return;
+
+		DynamicMaterial->SetVectorParameterValue(TEXT("CookingLevel"), newcolor);
+
+		pMesh->SetMaterial(0, DynamicMaterial);
+	}
 }

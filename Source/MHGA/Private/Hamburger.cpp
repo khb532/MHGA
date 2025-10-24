@@ -1,24 +1,27 @@
 #include "Hamburger.h"
-#include "Components/BoxComponent.h"
-
+#include "Net/UnrealNetwork.h"
 
 AHamburger::AHamburger()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	bReplicates = true;
 
 	BurgerName.Empty();
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	SetRootComponent(Mesh);
 	Mesh->SetSimulatePhysics(true);
+	Mesh->SetIsReplicated(true);
+	SetReplicateMovement(true);
 	Mesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-	
+
 }
 
 void AHamburger::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 void AHamburger::Tick(float DeltaTime)
@@ -29,19 +32,11 @@ void AHamburger::Tick(float DeltaTime)
 		PrintLog();
 }
 
-void AHamburger::OnGrabbed(AMHGACharacter* Player)
+void AHamburger::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
-	return;
-}
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-void AHamburger::OnPut()
-{
-	return;
-}
-
-void AHamburger::OnUse()
-{
-	return;
+	DOREPLIFETIME(AHamburger, BurgerName);
 }
 
 void AHamburger::SetLocation(FVector Loc)
@@ -53,20 +48,23 @@ void AHamburger::PrintLog()
 {
 	if (!BurgerName.IsEmpty())
 	{
-	FString ActorName = this->GetActorNameOrLabel();
 		FString Name = FString::Printf(TEXT("Burger Name : %s"), *BurgerName);
-		FString Str = FString::Printf(TEXT("%s\n"), *ActorName);
-		Str += Name;
-		DrawDebugString(GetWorld(), GetActorLocation(), Str, nullptr, FColor::Yellow, 0);
+		DrawDebugString(GetWorld(), GetActorLocation(), Name, nullptr, FColor::Yellow, 0);
 	}
 	
 }
 
-
+void AHamburger::ServerSetName_Implementation(const FString& Name)
+{
+	BurgerName = Name;
+}
 
 void AHamburger::SetName(FString Name)
 {
-	BurgerName = Name;
+	if (HasAuthority())
+		BurgerName = Name;
+	else
+		ServerSetName(Name);
 }
 
 FString AHamburger::GetBurgerName()
