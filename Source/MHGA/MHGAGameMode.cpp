@@ -69,6 +69,8 @@ void AMHGAGameMode::ReportScoreChanged(EScoreChangeReason reason, int32 changeSc
 		{
 			targetScore = &gs->orderSpeedScore;
 			changeScore = penaltySlowOrder;
+		UE_LOG(LogTemp, Warning, TEXT("서버 : 평점 변경됨 (사유 : %d, 점수 : %d, 현재: 주문%d, 전달%d, 정확%d)"), (int32)reason, changeScore, gs->orderSpeedScore, gs->cookSpeedScore, gs->foodScore);
+			
 			break;
 		}
 	
@@ -76,18 +78,24 @@ void AMHGAGameMode::ReportScoreChanged(EScoreChangeReason reason, int32 changeSc
 		{
 			targetScore = &gs->cookSpeedScore;
 			changeScore = penaltySlowCook;
+		UE_LOG(LogTemp, Warning, TEXT("서버 : 평점 변경됨 (사유 : %d, 점수 : %d, 현재: 주문%d, 전달%d, 정확%d)"), (int32)reason, changeScore, gs->orderSpeedScore, gs->cookSpeedScore, gs->foodScore);
+			
 			break;
 		}
 	case EScoreChangeReason::WrongFood:
 		{
 			targetScore = &gs->foodScore;
 			changeScore = penaltyWrongFood;
+		UE_LOG(LogTemp, Warning, TEXT("서버 : 평점 변경됨 (사유 : %d, 점수 : %d, 현재: 주문%d, 전달%d, 정확%d)"), (int32)reason, changeScore, gs->orderSpeedScore, gs->cookSpeedScore, gs->foodScore);
+			
 			break;
 		}
 	case EScoreChangeReason::CorrectFood:
 		{
 			targetScore = &gs->foodScore;
 			changeScore = bonusCorrectFood;
+			UE_LOG(LogTemp, Warning, TEXT("서버 : 평점 변경됨 (사유 : %d, 점수 : %d, 현재: 주문%d, 전달%d, 정확%d)"), (int32)reason, changeScore, gs->orderSpeedScore, gs->cookSpeedScore, gs->foodScore);
+			
 			break;
 		}
 	}

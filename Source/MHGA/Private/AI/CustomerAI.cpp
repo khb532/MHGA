@@ -78,6 +78,29 @@ void ACustomerAI::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& Ou
 	DOREPLIFETIME(ACustomerAI, customerWidget);
 }
 
+void ACustomerAI::UpdateVisuals(int32 meshIdx)
+{
+	// 적용할 비주얼 셋 포인터 (복사 방지)
+	const FCustomerVisuals* visual = nullptr;
+
+	if(meshIdx == -1)
+	{
+		visual = &specialVisual;
+	}
+	else if (regularVisuals.IsValidIndex(mteshIdx))
+                              	{
+                              		visual = &regularVisuals[meshIdx];
+                              	}
+                              
+                              	// VisualsToApply가 유효하고, 그 안의 메쉬와 AnimBP가 모두 설정되었는지 확인
+                              	if (visual && visual->customerMesh && visual->customerAnim)
+                              	{
+                              		GetMesh()->SetSkeletalMesh(visual->customerMesh); // 1. 메쉬 설정
+                              		GetMesh()->SetAnimInsanceClass(visual->customerAnim); // 2. Anim BP 설정
+		GetMesh()->SetRelativeScale3D(visual->RelativeScale);   // 3. ★★★ 스케일 설정 추가 ★★★
+	}
+}
+
 FText ACustomerAI::GetScoreDialogue(EScoreChangeReason reason)
 {
 	if (!scoreDialogueTable || !fsm) return FText::GetEmpty();
