@@ -1,5 +1,7 @@
 #include "MHGAGameInstance.h"
 
+#include <string>
+
 #include "MHGA.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
@@ -37,7 +39,8 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	//세션 검색 허용 여부
 	SessionSettings.bShouldAdvertise = true;
 	//세션 최대 참여 인원 설정
-	SessionSettings.NumPublicConnections = playerCount;
+	//TODO : 호스트는 public connections에 포함되지 않음
+	SessionSettings.NumPublicConnections = playerCount - 1;
 	//커스텀 정보	- Key,Value값
 	SessionSettings.Set(FName("NAME"), displayName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
@@ -53,7 +56,8 @@ void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSucc
 		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 성공"), *sessionName.ToString())
 
 		//레벨 이동 - 정확한 경로 적어야됨, 생성자에서 한 것처럼 하면 안됨
-		GetWorld()->ServerTravel(TEXT("/Game/Maps/Lobby?Listen"));
+		FString TravelURL = FString::Printf(TEXT("/Game/Maps/Lobby?listen?Nick=%s"), *NickName);
+		GetWorld()->ServerTravel(TravelURL);
 	}
 	else
 	{
@@ -126,8 +130,32 @@ void UMHGAGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionC
 		UE_LOG(LogTemp, Warning, TEXT("URL : %s"), *url);
 
 		//서버가 있는 맵으로 이동 (최초에 한 번만)
-		APlayerController* pc = GetWorld()->GetFirstPlayerController();
+		FString TravelURL = url + FString::Printf(TEXT("?Nick=%s"), *NickName);
 		
-		pc->ClientTravel(url, TRAVEL_Absolute);
+		APlayerController* pc = GetWorld()->GetFirstPlayerController();
+		pc->ClientTravel(TravelURL, TRAVEL_Absolute);
 	}
+}
+
+
+FString UMHGAGameInstance::StringBase64Encode(FString str)
+{
+	//str을 std::string으로 변경
+	std::string utf8str = TCHAR_TO_UTF8(*str);
+	//utf-8 String을 uint8 Array로 변경
+	TArray<uint8> arrayData = TArray<uint8>((uint8*)utf8str.c_str(), utf8str.length());
+
+	return FBase64::Encode(arrayData);
+}
+
+FString UMHGAGameInstance::StringBase64Decode(FString str)
+{
+	TArray<uint8> arrayData;
+	if (FBase64::Decode(str, arrayData))
+	{
+		std::string utf8str((char*)arrayData.GetData(), arrayData.Num());
+		return UTF8_TO_TCHAR(utf8str.c_str());
+		
+	}
+	return FString();
 }

@@ -37,11 +37,10 @@ protected:
 	UButton* BTN_Run;
 
 	//플레이어 텍스트 어레이
-	TArray<bool> IsPlayerReady;
 	UPROPERTY()
-	TArray<UTextBlock*> PlayerArr;
+	TArray<UBoardText*> PlayerArr;
 	UPROPERTY()
-	TArray<UTextBlock*> ReadyArr;
+	TArray<UBoardText*> ReadyArr;
 	
 	//생성할 보드 텍스트
 	UPROPERTY(EditAnywhere)

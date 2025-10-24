@@ -59,5 +59,10 @@ public:
 	//닉네임 설정
 	void SetPlayerName(FString name) {NickName = name; }
 	FString GetPlayerName() {return NickName;}
+
+	//문자열을 UTF-8 -> base64로 Encode하는 함수
+	FString StringBase64Encode(FString str);
+	//문자열을 base64 -> UTF-8로 Decode하는 함수
+	FString StringBase64Decode(FString str);
 };
 

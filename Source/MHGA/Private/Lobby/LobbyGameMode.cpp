@@ -11,6 +11,19 @@
 #include "Lobby/LobbyBoard.h"
 #include "Lobby/LobbyGameState.h"
 
+FString ALobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId,
+	const FString& Options, const FString& Portal)
+{
+	FString Result = Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
+
+	FString Nick = UGameplayStatics::ParseOption(Options, TEXT("Nick"));
+	if (NewPlayerController && NewPlayerController->PlayerState && !Nick.IsEmpty())
+	{
+		NewPlayerController->PlayerState->SetPlayerName(Nick);
+	}
+	return Result;
+}
+
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);

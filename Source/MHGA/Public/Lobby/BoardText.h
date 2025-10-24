@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "BoardText.generated.h"
 
+class USizeBox;
 class UTextBlock;
 UCLASS()
 class MHGA_API UBoardText : public UUserWidget
@@ -14,8 +15,10 @@ class MHGA_API UBoardText : public UUserWidget
 
 protected:
 	UPROPERTY(meta=(BindWidget))
+	USizeBox* SizeBox;
+	UPROPERTY(meta=(BindWidget))
 	UTextBlock* TEXT_Content;
 
 public:
-	void Init(FString txt);
+	void Init(FString txt, float sizeY);
 };
