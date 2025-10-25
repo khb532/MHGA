@@ -7,6 +7,7 @@
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
 #include "Online/OnlineSessionNames.h"
 
 void UMHGAGameInstance::Init()
@@ -17,9 +18,14 @@ void UMHGAGameInstance::Init()
 	if (subsys)
 	{
 		SessionInterface = subsys->GetSessionInterface();
-		SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnCreateSessionComplete);
-		SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnFindSessionComplete);
-		SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnJoinSessionComplete);
+		if (SessionInterface.IsValid())
+		{
+			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnCreateSessionComplete);
+			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnFindSessionComplete);
+			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnJoinSessionComplete);
+			SessionInterface->OnEndSessionCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnEndSessionComplete);
+			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UMHGAGameInstance::OnDestroySessionComplete);
+		}
 	}
 }
 
@@ -46,8 +52,18 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	SessionSettings.Set(FName("NAME"), displayName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	//sessionSettings 이용해서 세션 생성
+	if (!SessionInterface.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Session interface invalid. Failed to create session."));
+		return;
+	}
+
+	CurrentSessionName = FName(*displayName);
+	bIsHostingSession = true;
+	bPendingReturnToStart = false;
+
 	FUniqueNetIdPtr netId = GetWorld()->GetFirstLocalPlayerFromController()->GetUniqueNetIdForPlatformUser().GetUniqueNetId();
-	SessionInterface->CreateSession(*netId, FName(displayName), SessionSettings);
+	SessionInterface->CreateSession(*netId, CurrentSessionName, SessionSettings);
 }
 
 void UMHGAGameInstance::FindOtherSession()
@@ -90,6 +106,8 @@ void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSucc
 {
 	if (bWasSuccessful)
 	{
+		CurrentSessionName = sessionName;
+		bIsHostingSession = true;
 		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 성공"), *sessionName.ToString())
 
 		//레벨 이동 - 정확한 경로 적어야됨, 생성자에서 한 것처럼 하면 안됨
@@ -98,6 +116,8 @@ void UMHGAGameInstance::OnCreateSessionComplete(FName sessionName, bool bWasSucc
 	}
 	else
 	{
+		bIsHostingSession = false;
+		CurrentSessionName = NAME_None;
 		UE_LOG(LogTemp, Warning, TEXT("%s 세션 생성 실패"), *sessionName.ToString())
 	}
 }
@@ -125,6 +145,9 @@ void UMHGAGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionC
 	//참여에 성공 했다면
 	if (result == EOnJoinSessionCompleteResult::Success)
 	{
+		CurrentSessionName = sessionName;
+		bIsHostingSession = false;
+		bPendingReturnToStart = false;
 		//서버가 만들어 놓은 세션 URL 얻기
 		FString url;
 		SessionInterface->GetResolvedConnectString(sessionName, url);
@@ -135,6 +158,110 @@ void UMHGAGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionC
 		
 		APlayerController* pc = GetWorld()->GetFirstPlayerController();
 		pc->ClientTravel(TravelURL, TRAVEL_Absolute);
+	}
+}
+
+
+void UMHGAGameInstance::LeaveSessionAndReturnToStart()
+{
+	bPendingReturnToStart = true;
+
+	if (!SessionInterface.IsValid() || CurrentSessionName.IsNone())
+	{
+		TravelBackToStartLevel();
+		return;
+	}
+
+	if (!SessionInterface->GetNamedSession(CurrentSessionName))
+	{
+		TravelBackToStartLevel();
+		return;
+	}
+
+	if (SessionInterface->EndSession(CurrentSessionName))
+	{
+		return;
+	}
+
+	if (SessionInterface->DestroySession(CurrentSessionName))
+	{
+		return;
+	}
+
+	TravelBackToStartLevel();
+}
+
+void UMHGAGameInstance::OnEndSessionComplete(FName sessionName, bool bWasSuccessful)
+{
+	if (!bPendingReturnToStart)
+	{
+		return;
+	}
+
+	if (!SessionInterface.IsValid())
+	{
+		TravelBackToStartLevel();
+		return;
+	}
+
+	if (!CurrentSessionName.IsNone() && sessionName != CurrentSessionName)
+	{
+		return;
+	}
+
+	if (!bWasSuccessful)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("EndSession failed for %s"), *sessionName.ToString());
+	}
+
+	if (!SessionInterface->DestroySession(sessionName))
+	{
+		TravelBackToStartLevel();
+	}
+}
+
+void UMHGAGameInstance::OnDestroySessionComplete(FName sessionName, bool bWasSuccessful)
+{
+	if (!bPendingReturnToStart)
+	{
+		return;
+	}
+
+	if (!bWasSuccessful)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DestroySession failed for %s"), *sessionName.ToString());
+	}
+
+	TravelBackToStartLevel();
+}
+
+void UMHGAGameInstance::TravelBackToStartLevel()
+{
+	if (!bPendingReturnToStart)
+	{
+		return;
+	}
+
+	const bool bWasHosting = bIsHostingSession;
+	bPendingReturnToStart = false;
+	bIsHostingSession = false;
+	CurrentSessionName = NAME_None;
+
+	if (bWasHosting)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			const FString TravelURL = FString::Printf(TEXT("/Game/Maps/Start?listen?Nick=%s"), *NickName);
+			World->ServerTravel(TravelURL);
+		}
+	}
+	else
+	{
+		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0))
+		{
+			const FString TravelURL = FString::Printf(TEXT("/Game/Maps/Start?Nick=%s"), *NickName);
+			PlayerController->ClientTravel(TravelURL, TRAVEL_Absolute);
+		}
 	}
 }
 

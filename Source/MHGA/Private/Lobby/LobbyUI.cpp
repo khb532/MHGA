@@ -56,7 +56,7 @@ void ULobbyUI::OnClickRun()
 
 	if (UMHGAGameInstance* GI = GetWorld()->GetGameInstance<UMHGAGameInstance>())
 	{
-
+		GI->LeaveSessionAndReturnToStart();
 	}
 }
 

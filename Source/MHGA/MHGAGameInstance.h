@@ -28,6 +28,8 @@ protected:
 	
 	//현재 세션 이름
 	FName CurrentSessionName;
+	bool bIsHostingSession = false;
+	bool bPendingReturnToStart = false;
 
 	//세션 조회할 때 사용하는 객체
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
@@ -39,6 +41,10 @@ protected:
 	void OnFindSessionComplete(bool bWasSuccessful);
 	//세션 참여 완료 함수
 	void OnJoinSessionComplete(FName sessionName, EOnJoinSessionCompleteResult::Type result);
+	void OnEndSessionComplete(FName sessionName, bool bWasSuccessful);
+	void OnDestroySessionComplete(FName sessionName, bool bWasSuccessful);
+
+	void TravelBackToStartLevel();
 	
 public:
 	//세션 생성 관련
@@ -55,6 +61,9 @@ public:
 	//세션 참여 함수
 	UFUNCTION(BlueprintCallable)
 	void JoinOtherSession(int32 sessionIdx);
+
+	UFUNCTION(BlueprintCallable)
+	void LeaveSessionAndReturnToStart();
 
 	//닉네임 설정
 	void SetPlayerName(FString name) {NickName = name; }
