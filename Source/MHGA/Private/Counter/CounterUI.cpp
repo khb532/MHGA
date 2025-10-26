@@ -58,7 +58,9 @@ void UCounterUI::NativeConstruct()
 			int32 Col = ValidIndex % NumCols;
 			ValidIndex++;
 
-			MenuGrid->AddChildToUniformGrid(NewButton, Row, Col);
+			UUniformGridSlot* Uslot = MenuGrid->AddChildToUniformGrid(NewButton, Row, Col);
+			Uslot->SetHorizontalAlignment(HAlign_Fill);
+			Uslot->SetVerticalAlignment(VAlign_Fill);
 		}
 	}
 
@@ -212,6 +214,10 @@ void UCounterUI::OnMenuReadyBtnRPC()
 void UCounterUI::AddMenuToListRPC(const EBurgerMenu MenuName)
 {
 	UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
+	NewText->SetColorAndOpacity(FLinearColor(0, 0, 0));
+	FSlateFontInfo FontInfo = NewText->GetFont();
+	FontInfo.Size = 30;
+	NewText->SetFont(FontInfo);
 	if (NewText)
 	{
 		OrderList.Add(MenuName);
@@ -229,6 +235,10 @@ void UCounterUI::CustomerOrderedMenuRPC(UCustomerButtonUI* Btn)
 	for (EBurgerMenu M : Menu)
 	{
 		UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
+		NewText->SetColorAndOpacity(FLinearColor(0, 0, 0));
+		FSlateFontInfo FontInfo = NewText->GetFont();
+		FontInfo.Size = 30;
+		NewText->SetFont(FontInfo);
 		if (NewText)
 		{
 			NewText->SetText(MenuEnumPtr->GetDisplayNameTextByValue(static_cast<int64>(M)));
