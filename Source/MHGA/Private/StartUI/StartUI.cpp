@@ -117,10 +117,11 @@ void UStartUI::OnFindComplete(TArray<FOnlineSessionSearchResult>& Results)
 {
 	for (int i = 0; i<Results.Num(); i++)
 	{
-		FString DisplayName; //세션 이름
 		int32 MaxPlayers = Results[i].Session.SessionSettings.NumPublicConnections + 1; // 최대 플레이어 수
 		int32 CurrentPlayers = MaxPlayers - Results[i].Session.NumOpenPublicConnections; // 현재 플레이어 수
+		FString DisplayName; //세션 이름
 		Results[i].Session.SessionSettings.Get(FName("NAME"), DisplayName);
+		DisplayName = GI->StringBase64Decode(DisplayName);
 		UE_LOG(LogTemp, Warning, TEXT("세션: %i, 이름: %s, 인원: %d/%d"), i, *DisplayName, CurrentPlayers, MaxPlayers);
 
 		UJobButtonUI* Job = CreateWidget<UJobButtonUI>(GetWorld(), JobBtn);

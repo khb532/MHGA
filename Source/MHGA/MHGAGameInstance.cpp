@@ -48,6 +48,7 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	//세션 최대 참여 인원 설정
 	//TODO : 호스트는 public connections에 포함되지 않음
 	SessionSettings.NumPublicConnections = playerCount - 1;
+	displayName = StringBase64Encode(displayName);
 	//커스텀 정보	- Key,Value값
 	SessionSettings.Set(FName("NAME"), displayName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
