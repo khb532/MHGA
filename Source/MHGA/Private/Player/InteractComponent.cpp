@@ -88,19 +88,27 @@ void UInteractComponent::MulticastRPC_GrabProps_Implementation(FHitResult Hit)
 	GrabInterface->OnGrabbed(Owner);
 
 	/*Hit.GetComponent()->SetSimulatePhysics(false);
+	
 	Hit.GetComponent()->SetCollisionProfileName(TEXT("Grabbed"));
+	
 	HoldDistance = FVector::Dist(Owner->GetFirstPersonCameraComponent()->GetComponentLocation(), Hit.GetActor()->GetActorLocation());
+	
 	HoldDistance = FMath::Clamp(HoldDistance, 50, 200);
+	
 	Cast<AActor>(GrabInterface)->AttachToComponent(Owner->GetFirstPersonCameraComponent(),
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	
 	GrabInterface->SetLocation(Owner->GetFirstPersonCameraComponent()->GetComponentLocation() + Owner->GetFirstPersonCameraComponent()->GetForwardVector() * HoldDistance);*/
 
 	/* dove */
-	AIngredientBase* pgrab = Cast<AIngredientBase>(Hit.GetActor());
-	m_preview_mesh->SetStaticMesh(pgrab->GetMeshComp()->GetStaticMesh());
+	IGrabableProps* pgrab = Cast<IGrabableProps>(Hit.GetActor());
+	if (!pgrab) return;
+	UStaticMeshComponent* p_hitactor_meshcomp = pgrab->GetMeshComp();
+	if (!p_hitactor_meshcomp) return;
+	m_preview_mesh->SetStaticMesh(p_hitactor_meshcomp->GetStaticMesh());
 	m_preview_mesh->SetVisibility(true);
-	pgrab->GetMeshComp()->SetVisibility(false);
-	Cast<AIngredientBase>(Hit.GetActor())->GetMeshComp()->SetVisibility(false);/* dove */
+	p_hitactor_meshcomp->SetVisibility(false);
+	/* dove */
 
 	bIsGrabbed = true;
 	GrabbedProp = GrabInterface;
