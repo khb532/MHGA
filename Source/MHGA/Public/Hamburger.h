@@ -17,8 +17,8 @@ public:
 	void OnGrabbed(AMHGACharacter* Player) override {}
 	void OnPut() override	{}
 	void OnUse() override	{}
-
 	virtual void SetLocation(FVector Loc) override;
+	virtual UStaticMeshComponent* GetMeshComp() override	{ return Mesh;}
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetName(const FString& Name);
