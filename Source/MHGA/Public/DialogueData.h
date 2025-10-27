@@ -52,7 +52,10 @@ struct FOrderDialogue : public FTableRowBase
 	// "급한" 성격의 대사 목록
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
 	TArray<FText> Impatient_Variations;
-	
+
+	// "특별한" 성격의 대사 목록
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Dialogue")
+	TArray<FText> Special_Variations;
 };
 
 // 평판 대사 데이터 구조체
@@ -73,4 +76,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FText> Impatient_Variations;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FText> Special_Variations;
 };

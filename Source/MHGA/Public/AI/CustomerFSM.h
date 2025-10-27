@@ -64,7 +64,7 @@ public:
 	
 	/** 특별 손님이 등장할 확률 (0.0 ~ 1.0 사이 값) */
 	UPROPERTY(EditDefaultsOnly, Category = "AI State", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-	float SpecialCustomerChance = 0.05f; // 기본값 5%
+	float SpecialCustomerChance = 0.01f; // 기본값 5%
 	/**
 	 * 선택된 메쉬 인덱스. -1 = 특별 손님, 0+ = 일반 손님 메쉬 배열 인덱스
 	 * 클라이언트는 이 값을 복제받아 AI(몸)의 메쉬를 갱신합니다.

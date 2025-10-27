@@ -377,6 +377,10 @@ void UCustomerFSM::StartOrder()
 	// 랜덤으로 선택된 정수를 enum 타입으로 변환해 변수에 저장한다
 	orderedMenu = static_cast<EBurgerMenu>(RandomMenuIndex);
 
+	if (personality == ECustomerPersonality::Special_VIP)
+	{
+		orderedMenu = EBurgerMenu::WrongBurger;
+	}
 	// UEnum을 찾아 enum 값을 문자열로 변환
 	const UEnum* BurgerEnum = FindObject<UEnum>(nullptr, TEXT("/Script/MHGA.EBurgerMenu"), true);
 	if (BurgerEnum)
@@ -397,7 +401,7 @@ void UCustomerFSM::OnRep_Order()
 
 FText UCustomerFSM::GetOrderedMenuAsText()
 {
-		if (!MenuDialogueTable) return FText::GetEmpty();
+	if (!MenuDialogueTable) return FText::GetEmpty();
 	
 	// Enum 값(EBurgerMenu::BigMac)을 FName("BigMac")으로 변환
     // (데이터 테이블의 Row Name과 일치해야 함)
@@ -427,6 +431,9 @@ FText UCustomerFSM::GetOrderedMenuAsText()
     case ECustomerPersonality::Impatient:
         Variations = &DialogueRow->Impatient_Variations;
         break;
+    case ECustomerPersonality::Special_VIP:
+    	Variations = &DialogueRow->Special_Variations;
+    	break;
     case ECustomerPersonality::Standard:
     default:
         Variations = &DialogueRow->Standard_Variations;

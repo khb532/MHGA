@@ -55,7 +55,7 @@ public:
 	void OnRep_UpdateTime();
 
 	UPROPERTY()
-	float startTime = 10.0f;	// 초기 시간
+	float startTime = 100.0f;	// 초기 시간
 
 	// 게임 진행 상태
 	UPROPERTY(Replicated)
