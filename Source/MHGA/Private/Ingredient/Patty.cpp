@@ -80,7 +80,7 @@ void APatty::UpdateMaterial()
 
 		case EPattyCookState::Cooked:
 			bShouldChangeMat = true;
-			newcolor = FLinearColor::Red;
+			newcolor = FLinearColor(0.125,0.038,0.023);
 			break;
 
 		case EPattyCookState::Overcooked:
