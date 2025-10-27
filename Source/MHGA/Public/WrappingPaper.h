@@ -63,6 +63,9 @@ public:
 	class UDataTable* BurgerDataTable;
 
 	UPROPERTY(EditAnywhere)
+	class USceneComponent* Root;
+	
+	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere)

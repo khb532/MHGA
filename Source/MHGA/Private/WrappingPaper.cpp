@@ -14,8 +14,11 @@ AWrappingPaper::AWrappingPaper()
 	// 고려사항: 모든 클라이언트가 이 액터를 보고 상호작용해야 함
 	bReplicates = true;
 
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(Root);
+	
 	Collision = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
-	SetRootComponent(Collision);
+	Collision->SetupAttachment(RootComponent);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
