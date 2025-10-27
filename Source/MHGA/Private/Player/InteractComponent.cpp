@@ -9,6 +9,7 @@
 #include "Ingredient/IngredientBase.h"
 #include "ProfilingDebugging/CookStats.h"
 #include "Props/IngContainer.h"
+#include "Props/WrapperBox.h"
 
 UInteractComponent::UInteractComponent()
 {
@@ -66,6 +67,12 @@ void UInteractComponent::GrabProps()
 		{
 			wp->TryWrap();
 			return;
+		}
+
+		if (Cast<AWrapperBox>(Hit.GetActor()))
+		{
+			PRINTLOG(TEXT("FUCKFUCK"))
+			Cast<AWrapperBox>(Hit.GetActor())->SpawnWrapper();
 		}
 
 		//PRINTLOG(TEXT("%s"), *Hit.GetActor()->GetActorNameOrLabel());
