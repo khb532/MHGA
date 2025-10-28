@@ -37,6 +37,9 @@ public:
 	
 	void UpdateMaterial();
 
+	//	TODO : 조리시작, 조리중지 함수 구현
+	//	CookingArea에서 호출
+
 	
 protected:
 	virtual void BeginPlay() override;
