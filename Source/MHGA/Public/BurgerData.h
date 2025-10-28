@@ -20,8 +20,9 @@ enum class EIngredient : uint8
 	Cheese			UMETA(DisplayName = "Cheese"),
 	Pickle			UMETA(DisplayName = "Pickle"),
 	Sauce			UMETA(DisplayName = "Sauce"),
-	ShanghaiPortion	UMETA(DisplayName = "ShanghaiPotion"),
-	ShrimpPortion	UMETA(DisplayName = "ShrimpPotion"),
+	RawPortion		UMETA(DisplayName = "RawPortion"),
+	ShanghaiPortion	UMETA(DisplayName = "ShanghaiPortion"),
+	ShrimpPortion	UMETA(DisplayName = "ShrimpPortion"),
 };
 
 UENUM(BlueprintType)

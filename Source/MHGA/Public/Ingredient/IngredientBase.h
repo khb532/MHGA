@@ -19,13 +19,23 @@ public:
 	AIngredientBase();
 
 	virtual void OnGrabbed(AMHGACharacter* Player) override;
+	
 	virtual void OnPut() override;
+	
 	virtual void OnUse() override;
+	
 	virtual void SetLocation(FVector Loc) override;
+	
 	EIngredient GetIngType() { return IngType; }
+	
 	virtual bool IsTool() override { return false; }
 
-	UStaticMeshComponent* GetMeshComp() {return Mesh;}
+	virtual UStaticMeshComponent* GetMeshComp() override {return Mesh;}
+
+	virtual void StartCook(){};
+	virtual void ShutdownCook(){};
+
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;

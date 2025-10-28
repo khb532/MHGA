@@ -29,26 +29,26 @@ void ACookingArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!HasAuthority()) return;
+	// TODO : 튀김기에도 CookingArea 적용해야함. 패티기반으로만 되어있는걸 수정
+	// TODO : 대상 재료 -> 조리 시작 호출
+	/*	p_Patty >> p_IngredientBase
+	 *	
+	 */
+	TObjectPtr<AIngredientBase> p_oningredient = Cast<AIngredientBase>(OtherActor);
+	if (p_oningredient)
+		p_oningredient->StartCook();
 	
-	APatty* patty = Cast<APatty>(OtherActor);
-
-	// 패티가 '날것(Raw)' 상태일 때만 상호작용을 시작합니다.
-	if (patty && patty->GetCookState() == EPattyCookState::Raw && !overlapActorTimer.Contains(OtherActor))
-	{
-		FTimerHandle newTimerHandle;
-		FTimerDelegate TimerDelegate;
-		// 첫 번째 타이머는 'CookPatty' 함수를 호출합니다.
-		TimerDelegate.BindUFunction(this, FName("CookPatty"), OtherActor);
-
-		GetWorld()->GetTimerManager().SetTimer(newTimerHandle, TimerDelegate, cookingTime, false);
-		overlapActorTimer.Add(OtherActor, newTimerHandle);
-	}
 }
 
 void ACookingArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex)
 {
 	if (!HasAuthority()) return;
+	// TODO : 대상 재료의 조리중지 호출
+	// p_Ing -> ShutdownCook();
+	TObjectPtr<AIngredientBase> p_oningredient = Cast<AIngredientBase>(OtherActor);
+	if (p_oningredient)
+		// p_oningredient->ShutDownCook();
 	
 	// 영역을 나간 액터가 맵에 등록되어 있는지 확인합니다.
 	if (overlapActorTimer.Contains(OtherActor))
@@ -60,28 +60,6 @@ void ACookingArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Oth
 		overlapActorTimer.Remove(OtherActor);
 	}
 }
-
-/////////////////////////////////////////////////////////////////////
-///////* ChanageColor => Patty:UpdateMaterial로 대체됨 (khb) *///////
-
-/*void ACookingArea::ChangeColor(AActor* actor, FLinearColor newColor)
-{
-	// 색상 변경
-	UPrimitiveComponent* ComponentToChange = Cast<UPrimitiveComponent>(actor->GetComponentByClass(UPrimitiveComponent::StaticClass()));
-	if (ComponentToChange)
-	{
-		UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(ComponentToChange->GetMaterial(0), this);
-		if (DynamicMaterial)
-		{
-			DynamicMaterial->SetVectorParameterValue(paramName, newColor);
-			ComponentToChange->SetMaterial(0, DynamicMaterial);
-		}
-	}
-    
-	// 작업이 완료되었으므로 맵에서 이 액터를 제거합니다.
-	overlapActorTimer.Remove(actor);
-}*/
-////////////////////////////////////////////////////////////////
 
 void ACookingArea::CookPatty(AActor* actor)
 {
@@ -125,3 +103,4 @@ void ACookingArea::OvercookPatty(AActor* actor)
 	// 모든 작업이 끝났으므로 맵에서 제거합니다.
 	overlapActorTimer.Remove(actor);
 }
+

@@ -109,3 +109,8 @@ void APatty::UpdateMaterial()
 		pMesh->SetMaterial(0, DynamicMaterial);
 	}
 }
+
+//	TODO : 조리시작
+
+
+//	TODO : 조리중지
