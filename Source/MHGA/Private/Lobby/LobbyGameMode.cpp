@@ -36,31 +36,6 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 
 	PRINTINFO();
-
-	if (UMHGAGameInstance* GI = GetGameInstance<UMHGAGameInstance>())
-	{
-		if (IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld()))
-		{
-			if (IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); SessionInterface.IsValid())
-			{
-				if (APlayerState* PS = NewPlayer ? NewPlayer->PlayerState : nullptr)
-				{
-					const FUniqueNetIdRepl& UniqueId = PS->GetUniqueId();
-					if (UniqueId.IsValid())
-					{
-						if (const TSharedPtr<const FUniqueNetId> NetId = UniqueId.GetUniqueNetId())
-						{
-							if (!GI->GetCurrentSessionName().IsNone())
-							{
-								SessionInterface->RegisterPlayer(GI->GetCurrentSessionName(), *NetId, /*bWasInvited*/ false);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 	if (ALobbyGameState* LGS = GetGameState<ALobbyGameState>())
 	{
 		if (APlayerState* PS = NewPlayer ? NewPlayer->PlayerState : nullptr)
@@ -74,30 +49,6 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 void ALobbyGameMode::Logout(AController* Exiting)
 {
-	if (UMHGAGameInstance* GI = GetGameInstance<UMHGAGameInstance>())
-	{
-		if (IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld()))
-		{
-			if (IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); SessionInterface.IsValid())
-			{
-				if (APlayerState* PS = Exiting ? Exiting->PlayerState : nullptr)
-				{
-					const FUniqueNetIdRepl& UniqueId = PS->GetUniqueId();
-					if (UniqueId.IsValid())
-					{
-						if (const TSharedPtr<const FUniqueNetId> NetId = UniqueId.GetUniqueNetId())
-						{
-							if (!GI->GetCurrentSessionName().IsNone())
-							{
-								SessionInterface->UnregisterPlayer(GI->GetCurrentSessionName(), *NetId);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 	if (ALobbyGameState* LGS = GetGameState<ALobbyGameState>())
 	{
 		if (APlayerState* PS = Exiting ? Exiting->PlayerState : nullptr)
