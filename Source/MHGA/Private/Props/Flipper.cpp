@@ -2,6 +2,7 @@
 
 #include "MHGA.h"
 #include "Camera/CameraComponent.h"
+#include "Ingredient/Patty.h"
 #include "Player/InteractComponent.h"
 #include "Player/MHGACharacter.h"
 
@@ -71,6 +72,11 @@ void AFlipper::OnUse()
 			IGrabableProps* GrabInterface = Cast<IGrabableProps>(Hit.GetActor());
 			if (GrabInterface == nullptr)
 				return;
+			APatty* patty = Cast<APatty>(Hit.GetActor());
+			if (patty != nullptr)
+			{
+				patty->Flip();
+			}
 
 			
 			// 플레이어의 시선 기준 회전 행렬 생성
@@ -86,6 +92,7 @@ void AFlipper::OnUse()
 			FQuat NewQuat = FlipQuat * CurrentQuat;
 
 			Hit.GetActor()->SetActorRotation(NewQuat);
+			
 		}
 	}
 	
