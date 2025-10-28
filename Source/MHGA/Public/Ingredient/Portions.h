@@ -19,9 +19,15 @@ class MHGA_API APortions : public AIngredientBase
 	/* Method */
 public:
 	APortions();
-
+	
 	virtual void StartCook() override;
 	virtual void ShutdownCook() override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_StartCook();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ShutdownCook();
 
 	UFUNCTION()
 	void OnRep_CookState();
@@ -30,6 +36,8 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	virtual void BeginPlay() override;
 
 private:
 	void UpdateMaterial();
@@ -46,6 +54,9 @@ public:
 
 	UPROPERTY(ReplicatedUsing=OnRep_CookState)
 	EPortionCookState CookState;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> m_Material;
 
 private:
 	FTimerHandle h_CookTimer;
