@@ -5,10 +5,19 @@
 APatty::APatty()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 	bReplicates = true;
+	// 종합 상태 초기화
 	IngType = EIngredient::RawPatty;
 	CookState = EPattyCookState::Raw;
+
+	// 각 면 상태 초기화
+	bIsFrontCooked = false;
+	bIsBackCooked = false;
+	bIsFrontOverCooked = false;
+	bIsBackOverCooked = false;
+
+	// 기타 변수 초기화
+	bIsFrontSideDown = true; // 기본값 : 앞면이 아래
 }
 
 void APatty::BeginPlay()
