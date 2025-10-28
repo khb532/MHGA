@@ -43,6 +43,8 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	SessionSettings.bUseLobbiesIfAvailable = true;
 	SessionSettings.bUsesPresence = true;
 
+	SessionSettings.bAllowJoinInProgress = true;
+
 	//세션 검색 허용 여부
 	SessionSettings.bShouldAdvertise = true;
 	//세션 최대 참여 인원 설정
