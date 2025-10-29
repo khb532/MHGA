@@ -98,6 +98,10 @@ public:
 	void UpdateCookState();
 	// 머티리얼 변경 함수
 	void UpdateMaterial();
+	// 패티 앞뒷면 확인 함수
+	void Server_CheckFlip();
+	FTimerHandle checkFlipTimer;
+	float checkFlipTime = 0.5f;
 
 	// 구운 패티 텍스처
 	UPROPERTY(EditAnywhere)
