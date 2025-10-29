@@ -51,7 +51,7 @@ public:
 
 	virtual void OnGrabbed(AMHGACharacter* Player) override {}
 	virtual void OnPut() override {}
-	virtual void OnUse() override{}
+	virtual void OnUse() override{SetActorRelativeRotation(FRotator(0, 90, 90));}
 	virtual void SetLocation(FVector Loc) override;
 	virtual UStaticMeshComponent* GetMeshComp() override	{ return PaperMesh;}
 	virtual bool IsTool() override { return false; }

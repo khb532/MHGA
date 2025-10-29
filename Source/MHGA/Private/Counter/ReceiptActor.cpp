@@ -72,7 +72,9 @@ void AReceiptActor::OnUpdateCanvas(UCanvas* Canvas, int32 Width, int32 Height)
 	for (const FString& M : MenuList)
 	{
 		FCanvasTextItem MenuItem(FVector2D(LeftPadding, Y), FText::FromString(M), MenuFont, TextColor);
-		MenuItem.Scale = FVector2D(1.75f, 1.75f);
+		MenuItem.Scale = FVector2D(2, 2);
+		MenuItem.bOutlined = true;
+		MenuItem.OutlineColor = FLinearColor::Black;
 		Canvas->DrawItem(MenuItem);
 		Y += LineHeight;
 	}
