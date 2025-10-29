@@ -118,7 +118,8 @@ void UStartUI::OnFindComplete(TArray<FOnlineSessionSearchResult>& Results)
 	for (int i = 0; i<Results.Num(); i++)
 	{
 		int32 MaxPlayers = Results[i].Session.SessionSettings.NumPublicConnections; // 최대 플레이어 수
-		int32 CurrentPlayers = MaxPlayers - Results[i].Session.NumOpenPublicConnections; // 현재 플레이어 수
+		int32 CurrentPlayers; // 현재 플레이어 수
+		Results[i].Session.SessionSettings.Get(FName("PlayerCount"), CurrentPlayers);
 		FString DisplayName; //세션 이름
 		Results[i].Session.SessionSettings.Get(FName("NAME"), DisplayName);
 		DisplayName = GI->StringBase64Decode(DisplayName);

@@ -53,6 +53,7 @@ void UMHGAGameInstance::CreateMySession(FString displayName, int32 playerCount)
 	displayName = StringBase64Encode(displayName);
 	//커스텀 정보	- Key,Value값
 	SessionSettings.Set(FName("NAME"), displayName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	SessionSettings.Set(FName("PlayerCount"), 1, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	//sessionSettings 이용해서 세션 생성
 	if (!SessionInterface.IsValid())

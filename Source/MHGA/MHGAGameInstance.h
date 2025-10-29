@@ -68,6 +68,8 @@ public:
 	//닉네임 설정
 	void SetPlayerName(FString name) {NickName = name; }
 	FString GetPlayerName() {return NickName;}
+
+	//현재 세션 이름 가져오기
 	FName GetCurrentSessionName() const { return CurrentSessionName; }
 
 	//문자열을 UTF-8 -> base64로 Encode하는 함수
