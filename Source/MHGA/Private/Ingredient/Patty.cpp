@@ -1,4 +1,6 @@
 #include "Ingredient/Patty.h"
+
+#include "GeometryTypes.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -29,16 +31,16 @@ void APatty::BeginPlay()
 	if (pMesh)
 	{
 		// 슬롯0 : 앞면
-		if (pMesh->GetMaterial(1))
-		{
-			frontMaterial = UMaterialInstanceDynamic::Create(pMesh->GetMaterial(1), this);
-			pMesh->SetMaterial(1, frontMaterial);
-		}
-		// 슬롯1 : 뒷면
 		if (pMesh->GetMaterial(0))
 		{
-			backMaterial = UMaterialInstanceDynamic::Create(pMesh->GetMaterial(0), this);
-			pMesh->SetMaterial(0, backMaterial);
+			frontMaterial = UMaterialInstanceDynamic::Create(pMesh->GetMaterial(0), this);
+			pMesh->SetMaterial(0, frontMaterial);
+		}
+		// 슬롯1 : 뒷면
+		if (pMesh->GetMaterial(1))
+		{
+			backMaterial = UMaterialInstanceDynamic::Create(pMesh->GetMaterial(1), this);
+			pMesh->SetMaterial(1, backMaterial);
 		}
 	}
 
@@ -114,6 +116,8 @@ void APatty::Server_StartCooking_Implementation()
 {
 	if (bIsCooking) return;
 	bIsCooking = true;
+	Server_CheckFlip();
+	GetWorldTimerManager().SetTimer(checkFlipTimer, this, &APatty::Server_CheckFlip, checkFlipTime, true);
 	StartCookTimer();
 }
 
@@ -122,6 +126,7 @@ void APatty::Server_StopCooking_Implementation()
 	if (!bIsCooking) return;
 	bIsCooking = false;
 	StopAllTimer();
+	GetWorldTimerManager().ClearTimer(checkFlipTimer);
 }
 
 void APatty::Server_Flip_Implementation()
@@ -299,5 +304,51 @@ void APatty::UpdateMaterial()
 		backMaterial->SetTextureParameterValue(TEXT("BaseTexture"), backTexture);
 		backMaterial->SetTextureParameterValue(TEXT("Normal"), backNormal);
 		backMaterial->SetTextureParameterValue(TEXT("ORM"), backORM);
+	}
+}
+
+// 서버에서 앞뒤 상태 체크, 보정
+void APatty::Server_CheckFlip()
+{
+	if (!HasAuthority() || !bIsCooking)
+	{
+		GetWorldTimerManager().ClearTimer(checkFlipTimer);
+		return;
+	}
+	
+	// 패티의 현재 위 방향 벡터
+	FVector upVector = GetActorUpVector();
+
+	// 월드의 위 방향 벡터와 내적
+	float dot = FVector::DotProduct(upVector, FVector::UpVector);
+
+	// 물리적으로 뒤집혀있는지 체크
+	bool bIsPhysicallyFlipped = dot < 0.f;
+
+	// 현재 로직 상태와 물리 상태 비교 함수
+	bool bStateMismatch = false;
+	
+	if (bIsFrontSideDown && !bIsPhysicallyFlipped)
+	{
+		// 로직 : 앞면이 아래, 물리 : 뒷면이 아래 = 불일치
+		bIsFrontSideDown = false;
+		bStateMismatch = true;
+		UE_LOG(LogTemp, Warning, TEXT("패티가 윗면"));
+	}
+	else if (!bIsFrontSideDown && bIsPhysicallyFlipped)
+	{
+		// 로직 : 앞면이 위, 물리 : 뒷면이 위 = 불일치
+		bIsFrontSideDown = true;
+		bStateMismatch = true;
+		UE_LOG(LogTemp, Warning, TEXT("패티가 아랫면"));
+	}
+
+	// 상태가 불일치하여 보정되었을시
+	if (bStateMismatch)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("물리 상태 보정 감지. 새 방향으로 요리 타이머 재시작."));
+		
+		StopAllTimer();
+		StartCookTimer();
 	}
 }
