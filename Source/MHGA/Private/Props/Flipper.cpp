@@ -58,7 +58,7 @@ void AFlipper::OnUse()
 	FVector Start = GrabCharacter->GetFirstPersonCameraComponent()->GetComponentLocation();
 	FVector End = Start + GrabCharacter->GetFirstPersonCameraComponent()->GetForwardVector() * 200;
 
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(20.f);
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(5.f);
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -91,8 +91,19 @@ void AFlipper::OnUse()
 			// 최종 회전 = 기존 회전 * 반전 회전
 			FQuat NewQuat = FlipQuat * CurrentQuat;
 
+			// Patty에 회전 적용 전 월드 기준 Up 방향으로 임펄스 추가
+			if (patty != nullptr)
+			{
+				UPrimitiveComponent* PrimitiveComp = Cast<UPrimitiveComponent>(Hit.GetComponent());
+				if (PrimitiveComp && PrimitiveComp->IsSimulatingPhysics())
+				{
+					FVector ImpulseDirection = CurrentQuat.GetUpVector();
+					float ImpulseStrength = 200.f;
+					PrimitiveComp->AddImpulse(ImpulseDirection * ImpulseStrength, NAME_None, true);
+				}
+			}
+
 			Hit.GetActor()->SetActorRotation(NewQuat);
-			
 		}
 	}
 	
