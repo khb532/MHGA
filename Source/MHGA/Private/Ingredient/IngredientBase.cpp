@@ -23,11 +23,11 @@ void AIngredientBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HasAuthority() == false)
+	/*if (HasAuthority() == false)
 	{
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetEnableGravity(false);
-	}
+	}*/
 }
 
 void AIngredientBase::Tick(float DeltaTime)
