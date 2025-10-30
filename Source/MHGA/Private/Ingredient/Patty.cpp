@@ -1,6 +1,8 @@
 #include "Ingredient/Patty.h"
 
 #include "GeometryTypes.h"
+#include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -21,6 +23,7 @@ APatty::APatty()
 	// 기타 변수 초기화
 	bIsFrontSideDown = true; // 기본값 : 앞면이 아래
 	bIsCooking = false;
+
 }
 
 void APatty::BeginPlay()
@@ -115,6 +118,7 @@ void APatty::Flip()
 void APatty::Server_StartCooking_Implementation()
 {
 	if (bIsCooking) return;
+	MulticastRPC_PlayGrillSfx();
 	bIsCooking = true;
 	Server_CheckFlip();
 	GetWorldTimerManager().SetTimer(checkFlipTimer, this, &APatty::Server_CheckFlip, checkFlipTime, true);
@@ -124,6 +128,7 @@ void APatty::Server_StartCooking_Implementation()
 void APatty::Server_StopCooking_Implementation()
 {
 	if (!bIsCooking) return;
+	MulticastRPC_StopGrillSfx();
 	bIsCooking = false;
 	StopAllTimer();
 	GetWorldTimerManager().ClearTimer(checkFlipTimer);
@@ -139,6 +144,25 @@ void APatty::Server_Flip_Implementation()
 		StopAllTimer();
 		StartCookTimer();
 	}
+	MulticastRPC_PlayGrillSfx();
+}
+
+void APatty::MulticastRPC_PlayGrillSfx_Implementation()
+{
+	if (m_sfx_GrillSound)
+	{
+		if (m_sfx_GrillSoundComp && m_sfx_GrillSoundComp->IsPlaying())
+			m_sfx_GrillSoundComp->Stop();
+		
+		m_sfx_GrillSoundComp = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), m_sfx_GrillSound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3);
+		
+	}
+}
+
+void APatty::MulticastRPC_StopGrillSfx_Implementation()
+{
+	if (m_sfx_GrillSoundComp && m_sfx_GrillSoundComp->IsPlaying())
+		m_sfx_GrillSoundComp->Stop();
 }
 
 // 서버 전용

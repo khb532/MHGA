@@ -87,6 +87,12 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_Flip();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_PlayGrillSfx();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_StopGrillSfx();
+
 	// 서버 전용
 	// 현재 상태에 맞춘 타이머 시작 함수
 	void StartCookTimer();
@@ -116,4 +122,11 @@ public:
 	TObjectPtr<UTexture2D> cookedNormal;
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UTexture2D> cookedORM;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UAudioComponent> m_sfx_GrillSoundComp;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class USoundBase> m_sfx_GrillSound;
+	
 };

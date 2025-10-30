@@ -34,6 +34,12 @@ public:
 
 	void OnCookingComplete();
 
+	UFUNCTION(NetMulticast,Reliable)
+	void MulticastRPC_PlayFrySfx();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_StopFrySfx();
+	
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
@@ -57,6 +63,14 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> m_Material;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UAudioComponent> m_sfx_FrySoundComp;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class USoundBase> m_sfx_FrySound;
+
+	
 
 private:
 	FTimerHandle h_CookTimer;

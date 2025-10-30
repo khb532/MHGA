@@ -1,6 +1,8 @@
 #include "Ingredient/Portions.h"
 
 #include "MHGA.h"
+#include "Components/AudioComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -8,10 +10,8 @@ APortions::APortions()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	bReplicates = true;
 	IngType = EIngredient::RawPortion;
 	CookState = EPortionCookState::Raw;
-
 }
 
 void APortions::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -38,6 +38,8 @@ void APortions::StartCook()
 	}
 	else
 		ServerRPC_StartCook();
+	
+	MulticastRPC_PlayFrySfx();
 }
 
 void APortions::ServerRPC_StartCook_Implementation()
@@ -52,6 +54,8 @@ void APortions::ShutdownCook()
 		GetWorld()->GetTimerManager().ClearTimer(h_CookTimer);
 	else
 		ServerRPC_ShutdownCook();
+
+	MulticastRPC_StopFrySfx();
 }
 
 void APortions::ServerRPC_ShutdownCook_Implementation()
@@ -97,4 +101,23 @@ void APortions::UpdateMaterial()
 	}
 	else
 		PRINTLOG(TEXT("Portions is NaN"));
+}
+
+
+void APortions::MulticastRPC_PlayFrySfx_Implementation()
+{
+	if (m_sfx_FrySound)
+	{
+		if (m_sfx_FrySoundComp && m_sfx_FrySoundComp->IsPlaying())
+			m_sfx_FrySoundComp->Stop();
+		
+		m_sfx_FrySoundComp = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), m_sfx_FrySound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3);
+		
+	}
+}
+
+void APortions::MulticastRPC_StopFrySfx_Implementation()
+{
+	if (m_sfx_FrySoundComp && m_sfx_FrySoundComp->IsPlaying())
+		m_sfx_FrySoundComp->Stop();
 }

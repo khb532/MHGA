@@ -3,6 +3,7 @@
 #include "MHGA.h"
 #include "Components/BoxComponent.h"
 #include "Ingredient/Patty.h"
+#include "Kismet/GameplayStatics.h"
 
 ACookingArea::ACookingArea()
 {
@@ -16,6 +17,8 @@ ACookingArea::ACookingArea()
 		boxComp->OnComponentBeginOverlap.AddDynamic(this, &ACookingArea::OnOverlapBegin);
 		boxComp->OnComponentEndOverlap.AddDynamic(this, &ACookingArea::OnOverlapEnd);
 	}
+
+	bReplicates = true;
 }
 
 void ACookingArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -27,6 +30,12 @@ void ACookingArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* O
 	
 	if (p_oningredient)
 		p_oningredient->StartCook();
+
+	if (b_IsFryMachine)
+	{
+		if (!GetWorld()->GetTimerManager().IsTimerActive(h_FryTimerHandle))
+		GetWorld()->GetTimerManager().SetTimer(h_FryTimerHandle, this, &ACookingArea::PlayAlarm, m_nFryTime, false);
+	}
 	
 }
 
@@ -38,5 +47,20 @@ void ACookingArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Oth
 	
 	if (p_oningredient)
 		p_oningredient->ShutdownCook();
+
+	if (b_IsFryMachine)
+		if (GetWorld()->GetTimerManager().IsTimerActive(h_FryTimerHandle))
+			GetWorld()->GetTimerManager().ClearTimer(h_FryTimerHandle);
 	
 }
+
+void ACookingArea::MulticastRPC_PlayAlarm_Implementation()
+{
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), p_AlarmSound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3);
+}
+
+void ACookingArea::PlayAlarm()
+{
+	MulticastRPC_PlayAlarm();
+}
+
