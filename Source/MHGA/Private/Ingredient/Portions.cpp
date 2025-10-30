@@ -10,10 +10,8 @@ APortions::APortions()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	bReplicates = true;
 	IngType = EIngredient::RawPortion;
 	CookState = EPortionCookState::Raw;
-
 }
 
 void APortions::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
