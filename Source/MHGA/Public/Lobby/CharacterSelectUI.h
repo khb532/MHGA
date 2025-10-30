@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "CharacterSelectUI.generated.h"
 
+class ALobbyPlayerState;
 class UButton;
 /**
  * 
@@ -17,6 +18,9 @@ class MHGA_API UCharacterSelectUI : public UUserWidget
 
 protected:
 	virtual void NativeConstruct() override;
+
+	UPROPERTY()
+	ALobbyPlayerState* PS;
 
 	UPROPERTY(meta=(BindWidget))
 	UButton* BTN_P1;
@@ -32,4 +36,7 @@ protected:
 	UFUNCTION() void OnClicked_P2();
 	UFUNCTION() void OnClicked_P3();
 	UFUNCTION() void OnClicked_P4();
+
+public:
+	void SetPS(ALobbyPlayerState* inPS) {PS = inPS;}
 };

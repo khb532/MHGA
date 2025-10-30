@@ -10,6 +10,23 @@
 #include "GameFramework/PlayerController.h"
 #include "Online/OnlineSessionNames.h"
 
+UMHGAGameInstance::UMHGAGameInstance()
+{
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> m1(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Standing_W_Briefcase_Idle.Standing_W_Briefcase_Idle'"));
+	if (m1.Succeeded())
+		SkeletalMeshes.Add(m1.Object);
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> m2(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Player/P2.P2'"));
+	if (m2.Succeeded())
+		SkeletalMeshes.Add(m2.Object);
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> m3(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Player/P3.P3'"));
+	if (m3.Succeeded())
+		SkeletalMeshes.Add(m3.Object);
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> m4(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Player/P4.P4'"));
+	if (m4.Succeeded())
+		SkeletalMeshes.Add(m4.Object);
+		
+}
+
 void UMHGAGameInstance::Init()
 {
 	Super::Init();
@@ -292,4 +309,17 @@ FString UMHGAGameInstance::StringBase64Decode(FString str)
 		
 	}
 	return FString();
+}
+
+void UMHGAGameInstance::SetSelectCharacter(FString userName, int32 characterIdx)
+{
+	SelectCharacter.Add(userName, characterIdx);
+}
+
+int32 UMHGAGameInstance::GetSelectCharacter(FString userName)
+{
+	int32* value = SelectCharacter.Find(userName);
+	if (value == nullptr) return -1;
+
+	return *value;
 }

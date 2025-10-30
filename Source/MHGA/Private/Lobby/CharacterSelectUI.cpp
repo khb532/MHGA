@@ -1,6 +1,7 @@
 #include "Lobby/CharacterSelectUI.h"
 
 #include "Components/Button.h"
+#include "Lobby/LobbyPlayerState.h"
 
 void UCharacterSelectUI::NativeConstruct()
 {
@@ -14,16 +15,20 @@ void UCharacterSelectUI::NativeConstruct()
 
 void UCharacterSelectUI::OnClicked_P1()
 {
+	PS->ServerRPC_SelectPlayer(0);
 }
 
 void UCharacterSelectUI::OnClicked_P2()
 {
+	PS->ServerRPC_SelectPlayer(1);
 }
 
 void UCharacterSelectUI::OnClicked_P3()
 {
+	PS->ServerRPC_SelectPlayer(2);
 }
 
 void UCharacterSelectUI::OnClicked_P4()
 {
+	PS->ServerRPC_SelectPlayer(3);
 }

@@ -12,6 +12,7 @@
 #include "Components/WidgetInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Player/InteractComponent.h"
 #include "Player/MHGAPlayerController.h"
 #include "Player/PlayerAnim.h"
@@ -100,6 +101,13 @@ void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
+void AMHGACharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AMHGACharacter, SkeletalMesh);
+}
+
 void AMHGACharacter::MoveInput(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -178,4 +186,15 @@ void AMHGACharacter::EndVoiceInput()
 {
 	AMHGAPlayerController* pc = GetController<AMHGAPlayerController>();
 	pc->StopTalking();
+}
+
+void AMHGACharacter::OnRep_MeshChange()
+{
+	GetMesh()->SetSkeletalMesh(SkeletalMesh);
+}
+
+void AMHGACharacter::SetFirstPersonMesh(USkeletalMesh* inMesh)
+{
+	SkeletalMesh = inMesh;
+	OnRep_MeshChange();
 }

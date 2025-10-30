@@ -14,12 +14,14 @@
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "GameFramework/PlayerController.h"
+#include "Lobby/LobbyPlayerState.h"
 #include "Online/OnlineSessionNames.h"
 
 ALobbyGameMode::ALobbyGameMode()
 {
 	bUseSeamlessTravel = true;
 	GameSessionClass = AGameSession::StaticClass();
+	PlayerStateClass = ALobbyPlayerState::StaticClass();
 }
 
 FString ALobbyGameMode::InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId,
@@ -42,8 +44,11 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	PRINTINFO();
 	if (ALobbyGameState* LGS = GetGameState<ALobbyGameState>())
 	{
-		if (APlayerState* PS = NewPlayer ? NewPlayer->PlayerState : nullptr)
+		if (ALobbyPlayerState* PS = NewPlayer ? Cast<ALobbyPlayerState>(NewPlayer->PlayerState) : nullptr)
+		{
 			LGS->Server_AddPlayerName(PS->GetPlayerName());
+			PS->ClientRPC_MakeReadyUI();
+		}
 	}
 	else
 	{

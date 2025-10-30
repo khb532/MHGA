@@ -29,6 +29,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	//inputs
@@ -56,6 +57,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UWidgetInteractionComponent* WidgetInteraction; //3d widget interact
 
+	UPROPERTY(ReplicatedUsing=OnRep_MeshChange)
+	USkeletalMesh* SkeletalMesh;
+
 protected:
 	void MoveInput(const FInputActionValue& Value);
 	void LookInput(const FInputActionValue& Value);
@@ -67,11 +71,13 @@ protected:
 	void StartVoiceInput();
 	void EndVoiceInput();
 
+	UFUNCTION() void OnRep_MeshChange();
+
 public:
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return GetMesh(); }
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FPSCamComponent; }
 	UInteractComponent* GetInteractComponent() const {return InteractComponent;}
 
-	
+	void SetFirstPersonMesh(USkeletalMesh* inMesh);
 };
 

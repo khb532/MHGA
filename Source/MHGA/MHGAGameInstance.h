@@ -12,6 +12,9 @@ class MHGA_API UMHGAGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
+public:
+	UMHGAGameInstance();
+
 protected:
 	//begin play
 	virtual void Init() override;
@@ -76,5 +79,14 @@ public:
 	FString StringBase64Encode(FString str);
 	//문자열을 base64 -> UTF-8로 Decode하는 함수
 	FString StringBase64Decode(FString str);
+
+	UPROPERTY()
+	TArray<USkeletalMesh*> SkeletalMeshes;
+	USkeletalMesh* GetSkeletalMesh(int32 idx) {return SkeletalMeshes[idx]; }
+	
+	UPROPERTY()
+	TMap<FString, int32> SelectCharacter;
+	void SetSelectCharacter(FString userName, int32 characterIdx);
+	int32 GetSelectCharacter(FString userName);
 };
 
