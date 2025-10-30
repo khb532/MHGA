@@ -47,6 +47,8 @@ protected:
 	UInputAction* IA_Start;
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* IA_Voice;
+	UPROPERTY(EditAnywhere, Category ="Input")
+	UInputAction* IA_UI;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Components")
 	UCameraComponent* FPSCamComponent;
@@ -70,6 +72,9 @@ protected:
 	void StartInput(const FInputActionValue& Value);
 	void StartVoiceInput();
 	void EndVoiceInput();
+	void StartUIInput();
+	void EndUIInput();
+	
 
 	UFUNCTION() void OnRep_MeshChange();
 

@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "MHGA.h"
 #include "MHGAGameMode.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/WidgetInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -72,6 +73,9 @@ AMHGACharacter::AMHGACharacter()
 	ConstructorHelpers::FObjectFinder<UInputAction> voice(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Voice.IA_Voice'"));
 	if (voice.Succeeded())
 		IA_Voice = voice.Object;
+	ConstructorHelpers::FObjectFinder<UInputAction> ui(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_UI.IA_UI'"));
+	if (ui.Succeeded())
+		IA_UI = ui.Object;
 
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -98,6 +102,8 @@ void AMHGACharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		EnhancedInputComponent->BindAction(IA_Start, ETriggerEvent::Started, this, &AMHGACharacter::StartInput);
 		EnhancedInputComponent->BindAction(IA_Voice, ETriggerEvent::Started, this, &AMHGACharacter::StartVoiceInput);
 		EnhancedInputComponent->BindAction(IA_Voice, ETriggerEvent::Completed, this, &AMHGACharacter::EndVoiceInput);
+		EnhancedInputComponent->BindAction(IA_UI, ETriggerEvent::Started, this, &AMHGACharacter::StartUIInput);
+		EnhancedInputComponent->BindAction(IA_UI, ETriggerEvent::Completed, this, &AMHGACharacter::EndUIInput);
 	}
 }
 
@@ -186,6 +192,20 @@ void AMHGACharacter::EndVoiceInput()
 {
 	AMHGAPlayerController* pc = GetController<AMHGAPlayerController>();
 	pc->StopTalking();
+}
+
+void AMHGACharacter::StartUIInput()
+{
+	APlayerController* pc = GetWorld()->GetFirstPlayerController();
+	UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(pc);
+	pc->SetShowMouseCursor(true);
+}
+
+void AMHGACharacter::EndUIInput()
+{
+	APlayerController* pc = GetWorld()->GetFirstPlayerController();
+	UWidgetBlueprintLibrary::SetInputMode_GameOnly(pc);
+	pc->SetShowMouseCursor(false);
 }
 
 void AMHGACharacter::OnRep_MeshChange()
