@@ -1,5 +1,6 @@
 #include "Lobby/LobbyUI.h"
 
+#include "LevelSequencePlayer.h"
 #include "MHGA.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Button.h"
@@ -13,6 +14,7 @@
 #include "MHGAGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/MHGAPlayerController.h"
+#include "Runtime/LevelSequence/Public/LevelSequenceActor.h"
 
 void ULobbyUI::NativeConstruct()
 {
@@ -54,6 +56,23 @@ void ULobbyUI::OnClickRun()
 {
 	BTN_Run->SetIsEnabled(false);
 
+	FMovieSceneSequencePlaybackSettings settings;
+
+	settings.LoopCount.Value = 0;
+
+	ALevelSequenceActor* outActor = nullptr;
+
+	ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), runSequence, settings, outActor);
+	if (SequencePlayer)
+	{
+		SequencePlayer->OnFinished.AddDynamic(this, &ULobbyUI::OnSequenceFinish);
+		SequencePlayer->Play();
+	}
+	
+}
+
+void ULobbyUI::OnSequenceFinish()
+{
 	if (UMHGAGameInstance* GI = GetWorld()->GetGameInstance<UMHGAGameInstance>())
 	{
 		GI->LeaveSessionAndReturnToStart();

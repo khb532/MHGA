@@ -25,7 +25,7 @@ public class MHGA : ModuleRules
 			"OnlineSubsystemUtils",
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { "LevelSequence", "MovieScene" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"MHGA",

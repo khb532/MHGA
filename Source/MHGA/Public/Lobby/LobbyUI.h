@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequenceActor.h"
 #include "Blueprint/UserWidget.h"
 #include "LobbyUI.generated.h"
 
@@ -55,4 +56,10 @@ public:
 	UFUNCTION() void Ready(int32 PlayerNum);
 	UFUNCTION() void Run();
 	UFUNCTION() void Refresh(TArray<FString>& Names);
+
+	// 황규환 : 퇴장 레벨 시퀀스 추가
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class ULevelSequence> runSequence;
+	UFUNCTION()
+	void OnSequenceFinish();
 };
