@@ -59,18 +59,7 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 
 	PRINTINFO();
-	if (ALobbyGameState* LGS = GetGameState<ALobbyGameState>())
-	{
-		if (ALobbyPlayerState* PS = NewPlayer ? Cast<ALobbyPlayerState>(NewPlayer->PlayerState) : nullptr)
-		{
-			LGS->Server_AddPlayerName(PS->GetPlayerName());
-			PS->ClientRPC_MakeReadyUI();
-		}
-	}
-	else
-	{
-		PRINTINFO();
-	}
+	RegisterLobbyPlayer(NewPlayer ? Cast<ALobbyPlayerState>(NewPlayer->PlayerState) : nullptr);
 
 	if (HasAuthority())
 		UpdatePlayerCount();
@@ -120,11 +109,10 @@ APawn* ALobbyGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* N
 
 void ALobbyGameMode::UpdatePlayerCount()
 {
-	// 1. GameInstance 가져오기 및 Custom GameInstance로 캐스팅
 	UMHGAGameInstance* GameInstance = Cast<UMHGAGameInstance>(GetGameInstance());
 	if (!GameInstance) return;
     
-	// 2. 현재 활성화된 세션 이름 가져오기 (가장 중요한 부분!)
+	//현재 활성화된 세션 이름 가져오기
 	FName SessionToUpdate = GameInstance->GetCurrentSessionName();
 	if (SessionToUpdate.IsNone()) 
 	{
@@ -145,4 +133,87 @@ void ALobbyGameMode::UpdatePlayerCount()
 	}
 
 	SessionInterface->UpdateSession(SessionToUpdate,NewSettings,true);
+}
+
+void ALobbyGameMode::HandleSeamlessTravelPlayer(AController*& C)
+{
+	Super::HandleSeamlessTravelPlayer(C);
+
+	if (!HasAuthority())
+		return;
+
+	RegisterLobbyPlayer(C ? Cast<ALobbyPlayerState>(C->PlayerState) : nullptr);
+}
+
+void ALobbyGameMode::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+
+	ProcessPendingLobbyPlayers();
+}
+
+void ALobbyGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ProcessPendingLobbyPlayers();
+}
+
+void ALobbyGameMode::RegisterLobbyPlayer(ALobbyPlayerState* PlayerState)
+{
+	if (!HasAuthority() || !PlayerState)
+		return;
+
+	if (ALobbyGameState* LGS = GetGameState<ALobbyGameState>())
+	{
+		if (!ApplyPlayerToLobby(LGS, PlayerState))
+			return;
+	}
+	else
+	{
+		PendingLobbyPlayers.AddUnique(PlayerState);
+		return;
+	}
+
+	ProcessPendingLobbyPlayers();
+}
+
+void ALobbyGameMode::ProcessPendingLobbyPlayers()
+{
+	if (!HasAuthority() || PendingLobbyPlayers.Num() == 0)
+		return;
+
+	ALobbyGameState* LGS = GetGameState<ALobbyGameState>();
+	if (!LGS)
+		return;
+
+	for (int32 Index = PendingLobbyPlayers.Num() - 1; Index >= 0; --Index)
+	{
+		if (ALobbyPlayerState* PlayerState = PendingLobbyPlayers[Index].Get())
+			ApplyPlayerToLobby(LGS, PlayerState);
+
+		PendingLobbyPlayers.RemoveAtSwap(Index);
+	}
+}
+
+bool ALobbyGameMode::ApplyPlayerToLobby(ALobbyGameState* gs, ALobbyPlayerState* PlayerState)
+{
+	if (!gs || !PlayerState)
+		return false;
+
+	TArray<FString>& PlayerNames = gs->GetPlayerNames();
+	const FString& PlayerName = PlayerState->GetPlayerName();
+
+	if (!PlayerNames.Contains(PlayerName))
+	{
+		gs->Server_AddPlayerName(PlayerName);
+	}
+	else
+	{
+		gs->OnPlayerNamesChanged.Broadcast();
+	}
+
+	PlayerState->ClientRPC_MakeReadyUI();
+
+	return true;
 }

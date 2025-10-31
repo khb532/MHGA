@@ -7,6 +7,9 @@
 #include "LobbyGameMode.generated.h"
 
 class ALobbyBoard;
+class ALobbyPlayerState;
+class ALobbyGameState;
+
 /**
  * 
  */
@@ -26,6 +29,17 @@ protected:
 	virtual void Logout(AController* Exiting) override;
 	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
 	
+	virtual void HandleSeamlessTravelPlayer(AController*& C) override;
+	virtual void PostSeamlessTravel() override;
+	virtual void BeginPlay() override;
 
 	void UpdatePlayerCount();
+
+private:
+	void RegisterLobbyPlayer(ALobbyPlayerState* PlayerState);
+	void ProcessPendingLobbyPlayers();
+	bool ApplyPlayerToLobby(ALobbyGameState* GameState, ALobbyPlayerState* PlayerState);
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<ALobbyPlayerState>> PendingLobbyPlayers;
 };
