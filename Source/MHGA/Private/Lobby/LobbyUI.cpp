@@ -48,7 +48,22 @@ void ULobbyUI::OnClickReady()
 	if (LobbyBoard->HasAuthority())
 	{
 		PRINTINFO()
-		GetWorld()->ServerTravel(TEXT("/Game/Maps/Main"), true);
+
+		// 모든 플레이어에게 로딩창 표시 요청
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (AMHGAPlayerController* PC = Cast<AMHGAPlayerController>(It->Get()))
+			{
+				PC->ClientShowLoading();
+			}
+		}
+
+		// 약간의 지연 후 서버 트래블
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+		{
+			GetWorld()->ServerTravel(TEXT("/Game/Maps/Main"), true);
+		}, 0.1f, false);
 	}
 }
 
@@ -84,7 +99,22 @@ void ULobbyUI::Ready(int32 PlayerNum)
 	if (LobbyBoard->HasAuthority())
 	{
 		PRINTINFO()
-		GetWorld()->ServerTravel(TEXT("/Game/Maps/Main?listen"));
+
+		// 모든 플레이어에게 로딩창 표시 요청
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (AMHGAPlayerController* PC = Cast<AMHGAPlayerController>(It->Get()))
+			{
+				PC->ClientShowLoading();
+			}
+		}
+
+		// 약간의 지연 후 서버 트래블
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+		{
+			GetWorld()->ServerTravel(TEXT("/Game/Maps/Main?listen"));
+		}, 0.1f, false);
 	}
 }
 

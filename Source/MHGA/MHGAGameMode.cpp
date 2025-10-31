@@ -179,6 +179,24 @@ void AMHGAGameMode::GameStart()
 	}
 }
 
+void AMHGAGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	if (AMHGAPlayerController* PC = Cast<AMHGAPlayerController>(NewPlayer))
+	{
+		// 약간의 지연 후 로딩창 숨김
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [PC]()
+		{
+			if (PC)
+			{
+				PC->ClientHideLoading();
+			}
+		}, 3.0f, false); // 1초 후 숨김
+	}
+}
+
 void AMHGAGameMode::HandleGameOver(FString reason)
 {
 	AMHGAGameState* gs = GetGameState<AMHGAGameState>();
@@ -188,7 +206,7 @@ void AMHGAGameMode::HandleGameOver(FString reason)
 		UE_LOG(LogTemp, Error, TEXT("서버 : 영업 종료! 사유 : %s"), *reason);
 
 		ACustomerManager* CustomerManager = Cast<ACustomerManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACustomerManager::StaticClass()));
-		
+
 		// 모든 손님을 퇴장시키라고 명령.
 		if (CustomerManager)
 		{

@@ -93,5 +93,17 @@ public:
 	//사운드
 	UPROPERTY(EditAnywhere)
 	USoundAttenuation* SoundAttenuation;
+	// Loading Screen
+	void ShowLoadingScreen();
+	void HideLoadingScreen();
+
+private:
+	// Loading Widget Class
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class ULoadingWidget> LoadingWidgetClass;
+
+	// Loading Widget Instance
+	UPROPERTY()
+	class ULoadingWidget* LoadingWidget;
 };
 
