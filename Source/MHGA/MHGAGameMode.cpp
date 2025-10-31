@@ -188,7 +188,7 @@ void AMHGAGameMode::HandleGameOver(FString reason)
 		UE_LOG(LogTemp, Error, TEXT("서버 : 영업 종료! 사유 : %s"), *reason);
 
 		ACustomerManager* CustomerManager = Cast<ACustomerManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACustomerManager::StaticClass()));
-       
+		
 		// 모든 손님을 퇴장시키라고 명령.
 		if (CustomerManager)
 		{
@@ -196,6 +196,14 @@ void AMHGAGameMode::HandleGameOver(FString reason)
 		}
 		// TODO : 게임 종료 처리(플레이어 입력 중지, 결과화면 표시)
 		gs->OnRep_GameOver();
-		
+
+		if (HasAuthority())
+		{
+			FTimerHandle handle;
+			GetWorldTimerManager().SetTimer(handle, [this]()
+			{
+				GetWorld()->ServerTravel(TEXT("/Game/Maps/Lobby"), true);
+			}, 10, false);
+		}
 	}
 }
