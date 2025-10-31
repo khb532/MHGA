@@ -42,7 +42,10 @@ public:
 	TObjectPtr<class USoundBase> p_AlarmSound;
 
 	UPROPERTY(EditAnywhere)
-	int32 m_nFryTime = 30;
+	int32 m_nFryTime = 15;
+
+	UPROPERTY(EditAnywhere)
+	class AGasFryer* myGasFryer;
 
 	UPROPERTY(EditAnywhere)
 	UMHGAGameInstance* GI;

@@ -34,7 +34,7 @@ void APortions::StartCook()
 	if (HasAuthority())
 	{
 		if (CookState == EPortionCookState::Cooked) return;
-		GetWorld()->GetTimerManager().SetTimer(h_CookTimer, this, &APortions::OnCookingComplete, 5.f, false);
+		GetWorld()->GetTimerManager().SetTimer(h_CookTimer, this, &APortions::OnCookingComplete, 15.f, false);
 	}
 	else
 		ServerRPC_StartCook();
@@ -45,7 +45,7 @@ void APortions::StartCook()
 void APortions::ServerRPC_StartCook_Implementation()
 {
 	if (CookState == EPortionCookState::Cooked) return;
-	GetWorld()->GetTimerManager().SetTimer(h_CookTimer, this, &APortions::OnCookingComplete, 5.f, false);
+	GetWorld()->GetTimerManager().SetTimer(h_CookTimer, this, &APortions::OnCookingComplete, 15.f, false);
 }
 
 void APortions::ShutdownCook()

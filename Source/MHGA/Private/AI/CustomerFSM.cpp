@@ -517,59 +517,6 @@ void UCustomerFSM::CheckAndTakeFood()
 		MyPickupZone->ClearAllFood();
 		SetState(EAIState::Exit);
 	}
-	
-	// if (!GetOwner() || !GetOwner()->HasAuthority()) return;
-	// if (!IsValid(MyPickupZone)) return;
-	//
-	// if (MyPickupZone->HasFood())
-	// {
-	// 	// 픽업 존에서 가져온 액터를 AHamburger로 형변환합니다.
-	// 	AHamburger* TakenHamburger = Cast<AHamburger>(MyPickupZone->TakeFood());
-	// 	
-	// 	if (IsValid(TakenHamburger))
-	// 	{
-	// 		AMHGAGameMode* gm = GetWorld()->GetAuthGameMode<AMHGAGameMode>();
-	// 		// --- 1. 주문한 메뉴(enum)를 FString으로 변환 ---
-	// 		FString OrderedMenuName;
-	// 		UEnum* BurgerEnum = StaticEnum<EBurgerMenu>();
-	// 		if (BurgerEnum)
-	// 		{
-	// 			// GetNameStringByValue는 "BigMac"과 같이 깔끔한 이름을 반환합니다.
-	// 			OrderedMenuName = BurgerEnum->GetNameStringByValue(static_cast<int64>(orderedMenu));
-	// 		}
-	//
-	// 		// 햄버거 액터에서 FString 이름을 가져옴
-	// 		FString TakenBurgerName = TakenHamburger->GetBurgerName();
-	//
-	// 		// 두 FString을 비교
-	// 		if (OrderedMenuName == TakenBurgerName)
-	// 		{
-	// 			// 같은 값이면 평점 올리기
-	// 			gm->ReportScoreChanged(EScoreChangeReason::CorrectFood, gm->bonusCorrectFood);
-	// 			me->ShowScoreFeedback(EScoreChangeReason::CorrectFood);
-	// 			UE_LOG(LogTemp, Log, TEXT("주문한 메뉴와 동일! 만족!"));
-	// 			manager->OnCustomerFinished(me);
-	// 			SetState(EAIState::Exit);
-	// 		}
-	// 		else
-	// 		{
-	// 			// 다른 음식이면 평점 깎기
-	// 			gm->ReportScoreChanged(EScoreChangeReason::WrongFood, gm->penaltyWrongFood);
-	// 			me->ShowScoreFeedback(EScoreChangeReason::WrongFood);
-	// 			UE_LOG(LogTemp, Warning, TEXT("다른 메뉴를 받음! 주문: %s, 받은 것: %s"), *OrderedMenuName, *TakenBurgerName);
-	// 			manager->OnCustomerFinished(me);
-	// 			SetState(EAIState::Exit);
-	// 		}
-	//
-	// 		TakenHamburger->Destroy();
-	// 		SetState(EAIState::Exit);
-	// 	}
-	// }
-	// else
-	// {
-	// 	UE_LOG(LogTemp, Warning, TEXT("픽업대에 도착했지만 음식이 없습니다. 다시 대기합니다..."));
-	// 	SetState(EAIState::Wandering);
-	// }
 }
 
 void UCustomerFSM::ExitStore()
