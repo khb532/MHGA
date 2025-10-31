@@ -20,7 +20,7 @@ ALobbyBoard::ALobbyBoard()
 	
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
 	WidgetComponent->SetupAttachment(MeshComponent);
-	ConstructorHelpers::FClassFinder<ULobbyUI> lo(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/Lobby/WBP_LobbyUI.WBP_LobbyUI_C'"));
+	ConstructorHelpers::FClassFinder<ULobbyUI> lo(TEXT("/Game/UI/Lobby/WBP_LobbyUI.WBP_LobbyUI_C"));
 	if (lo.Succeeded())
 		WidgetComponent->SetWidgetClass(lo.Class);
 

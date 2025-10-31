@@ -3,6 +3,7 @@
 #include "MHGA.h"
 #include "AI/CustomerAI.h"
 #include "AI/CustomerFSM.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
@@ -228,7 +229,7 @@ void UCounterUI::OnMenuReadyBtnRPC()
 
 void UCounterUI::AddMenuToListRPC(const EBurgerMenu MenuName)
 {
-	UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
+	UTextBlock* NewText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 	NewText->SetColorAndOpacity(FLinearColor(0, 0, 0));
 	FSlateFontInfo FontInfo = NewText->GetFont();
 	FontInfo.Size = 30;
@@ -249,7 +250,7 @@ void UCounterUI::CustomerOrderedMenuRPC(UCustomerButtonUI* Btn)
 	TArray<EBurgerMenu> Menu = Btn->GetMenuInfo();
 	for (EBurgerMenu M : Menu)
 	{
-		UTextBlock* NewText = NewObject<UTextBlock>(this, UTextBlock::StaticClass());
+		UTextBlock* NewText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 		NewText->SetColorAndOpacity(FLinearColor(0, 0, 0));
 		FSlateFontInfo FontInfo = NewText->GetFont();
 		FontInfo.Size = 30;

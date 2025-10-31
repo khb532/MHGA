@@ -55,7 +55,7 @@ struct FBurgerRecipe : public FTableRowBase
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EBurgerMenu BurgerName;
+	EBurgerMenu BurgerName = EBurgerMenu::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FIngredientStack> Ingredients;
