@@ -86,6 +86,10 @@ void AMHGACharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	APlayerController* pc = GetWorld()->GetFirstPlayerController();
+	UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx(pc);
+	pc->SetShowMouseCursor(false);
+	
 	if (IsLocallyControlled() == false) WidgetInteraction->Deactivate();
 }
 
