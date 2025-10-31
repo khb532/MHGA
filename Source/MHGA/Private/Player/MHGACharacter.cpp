@@ -48,8 +48,8 @@ AMHGACharacter::AMHGACharacter()
 	WidgetInteraction->SetupAttachment(FPSCamComponent);
 	WidgetInteraction->InteractionDistance = 200.f;
 	// 디버그 라인 표시 (테스트용)
-	WidgetInteraction->bShowDebug = true;
-	WidgetInteraction->DebugLineThickness = 0.1f;
+	// WidgetInteraction->bShowDebug = true;
+	// WidgetInteraction->DebugLineThickness = 0.1f;
 	
 	//////////////////////////////////Input///////////////////////////////
 	ConstructorHelpers::FObjectFinder<UInputAction> move(TEXT("/Script/EnhancedInput.InputAction'/Game/Input/Actions/IA_Move.IA_Move'"));

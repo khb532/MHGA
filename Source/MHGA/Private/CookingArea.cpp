@@ -2,9 +2,11 @@
 
 #include "GasFryer.h"
 #include "MHGA.h"
+#include "MHGAGameInstance.h"
 #include "Components/BoxComponent.h"
 #include "Ingredient/Patty.h"
 #include "Kismet/GameplayStatics.h"
+
 
 ACookingArea::ACookingArea()
 {
@@ -20,6 +22,13 @@ ACookingArea::ACookingArea()
 	}
 
 	bReplicates = true;
+}
+
+void ACookingArea::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GI = GetGameInstance<UMHGAGameInstance>();
 }
 
 void ACookingArea::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -58,7 +67,8 @@ void ACookingArea::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Oth
 
 void ACookingArea::MulticastRPC_PlayAlarm_Implementation()
 {
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), p_AlarmSound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3);
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), p_AlarmSound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3
+		,1, 0,GI->SoundAttenuation);
 }
 
 void ACookingArea::PlayAlarm()

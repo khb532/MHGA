@@ -13,6 +13,7 @@
 #include "Counter/MenuButtonUI.h"
 #include "Counter/CustomerButtonUI.h"
 #include "Counter/ReceiptActor.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/MHGAPlayerController.h"
 
 
@@ -25,6 +26,10 @@ UCounterUI::UCounterUI(const FObjectInitializer& ObjectInitializer): Super(Objec
 	ConstructorHelpers::FClassFinder<UCustomerButtonUI> cb(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/WBP_CustomerBtn.WBP_CustomerBtn_C'"));
 	if (cb.Succeeded())
 		CustomerButtonClass = cb.Class;
+
+	ConstructorHelpers::FObjectFinder<USoundBase> sound(TEXT("/Script/Engine.SoundWave'/Game/Asset/Sound/beep.beep'"));
+	if (sound.Succeeded())
+		BeepSound = sound.Object;
 }
 
 void UCounterUI::NativeConstruct()
@@ -65,6 +70,16 @@ void UCounterUI::NativeConstruct()
 	}
 
 	CustomerCanvas->SetVisibility(ESlateVisibility::Hidden);
+}
+
+FReply UCounterUI::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, BeepSound, PosActor->GetActorLocation());
+	}
+
+	return FReply::Unhandled();
 }
 
 void UCounterUI::SetPosActor(ACounterPOS* Pos)

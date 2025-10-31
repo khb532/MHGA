@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "IngredientBase.generated.h"
 
+class UMHGAGameInstance;
 class AMHGACharacter;
 enum class EIngredient : uint8;
 
@@ -56,5 +57,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Ingredients")
 	AMHGACharacter* GrabCharacter;
-	
+
+	UPROPERTY()
+	UMHGAGameInstance* GI;
 };

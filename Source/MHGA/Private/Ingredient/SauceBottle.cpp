@@ -1,12 +1,18 @@
 #include "Ingredient/SauceBottle.h"
 
 #include "MHGA.h"
+#include "MHGAGameInstance.h"
 #include "Components/ArrowComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 ASauceBottle::ASauceBottle()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	ConstructorHelpers::FObjectFinder<USoundBase> sound(TEXT("/Script/Engine.SoundCue'/Game/Asset/Sound/ketchup/Sauce.Sauce'"));
+	if (sound.Succeeded())
+		SauceSound = sound.Object;
 
 	IngType = EIngredient::None;
 
@@ -45,6 +51,12 @@ void ASauceBottle::OnUse()
 	
 }
 
+void ASauceBottle::MulticastRPC_PlaySauceSound_Implementation()
+{
+	UGameplayStatics::PlaySoundAtLocation(this, SauceSound, GetActorLocation(),
+		1, 1, 0, GI->SoundAttenuation);
+}
+
 void ASauceBottle::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -75,5 +87,6 @@ void ASauceBottle::ShootSauce()
 		FVector SpawnLoc = HitResult.ImpactPoint + FVector(0, 0, 20);
 		UE_LOG(LogTemp, Warning, TEXT("%f, %f, %f"), SpawnLoc.X, SpawnLoc.Y, SpawnLoc.Z);
 		auto Sauce = GetWorld()->SpawnActor(SauceClass, &SpawnLoc, &FRotator::ZeroRotator);
+		MulticastRPC_PlaySauceSound();
 	}
 }

@@ -24,7 +24,9 @@ UMHGAGameInstance::UMHGAGameInstance()
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> m4(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Player/P4.P4'"));
 	if (m4.Succeeded())
 		SkeletalMeshes.Add(m4.Object);
-		
+	ConstructorHelpers::FObjectFinder<USoundAttenuation> sound(TEXT("/Script/Engine.SoundAttenuation'/Game/Asset/Sound/SoundAttenuation.SoundAttenuation'"));
+	if (sound.Succeeded())
+		SoundAttenuation = sound.Object;
 }
 
 void UMHGAGameInstance::Init()

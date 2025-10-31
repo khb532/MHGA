@@ -3,6 +3,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Player/InteractComponent.h"
 #include "Player/MHGACharacter.h"
+#include "MHGAGameInstance.h"
 
 
 AIngredientBase::AIngredientBase()
@@ -23,6 +24,7 @@ void AIngredientBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GI = GetGameInstance<UMHGAGameInstance>();
 	/*if (HasAuthority() == false)
 	{
 		Mesh->SetSimulatePhysics(false);

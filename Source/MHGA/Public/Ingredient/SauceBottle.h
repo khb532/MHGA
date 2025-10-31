@@ -4,6 +4,8 @@
 #include "IngredientBase.h"
 #include "SauceBottle.generated.h"
 
+class USoundBase;
+
 UCLASS()
 class MHGA_API ASauceBottle : public AIngredientBase
 {
@@ -25,6 +27,8 @@ protected:
 	virtual void OnUse() override;
 
 private:
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_PlaySauceSound();
 
 
 /* Field */
@@ -42,5 +46,7 @@ protected:
 
 private:
 	bool bGrabbed = false;
-	
+
+	UPROPERTY()
+	USoundBase* SauceSound;
 };

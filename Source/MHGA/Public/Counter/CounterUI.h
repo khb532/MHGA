@@ -26,6 +26,7 @@ public:
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -82,6 +83,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCustomerButtonUI* CustomerBtn;
 
+	//beep sound
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* BeepSound;
+	
 protected:
 	UFUNCTION(BlueprintCallable)
 	void OnClickCustomerBtn();

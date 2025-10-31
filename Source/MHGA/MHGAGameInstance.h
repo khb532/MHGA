@@ -88,5 +88,10 @@ public:
 	TMap<FString, int32> SelectCharacter;
 	void SetSelectCharacter(FString userName, int32 characterIdx);
 	int32 GetSelectCharacter(FString userName);
+
+public:
+	//사운드
+	UPROPERTY(EditAnywhere)
+	USoundAttenuation* SoundAttenuation;
 };
 
