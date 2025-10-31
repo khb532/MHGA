@@ -79,6 +79,8 @@ AMHGACharacter::AMHGACharacter()
 
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->MaxWalkSpeed = 300;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 200;
 	bReplicates = true;
 }
 
