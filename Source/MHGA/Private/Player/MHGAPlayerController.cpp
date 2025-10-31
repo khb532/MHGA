@@ -7,6 +7,7 @@
 #include "InputMappingContext.h"
 #include "MHGACameraManager.h"
 #include "MHGAGameState.h"
+#include "MHGAGameInstance.h"
 #include "Counter/CounterPOS.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -104,8 +105,24 @@ void AMHGAPlayerController::Client_HandleGameOver()
 		// 이동 컴포넌트 정지
 		MyCharacter->GetCharacterMovement()->StopMovementImmediately();
 		MyCharacter->GetCharacterMovement()->DisableMovement();
-        
+
 		// 입력 비활성화
 		MyCharacter->DisableInput(this);
+	}
+}
+
+void AMHGAPlayerController::ClientShowLoading_Implementation()
+{
+	if (UMHGAGameInstance* GI = Cast<UMHGAGameInstance>(GetGameInstance()))
+	{
+		GI->ShowLoadingScreen();
+	}
+}
+
+void AMHGAPlayerController::ClientHideLoading_Implementation()
+{
+	if (UMHGAGameInstance* GI = Cast<UMHGAGameInstance>(GetGameInstance()))
+	{
+		GI->HideLoadingScreen();
 	}
 }

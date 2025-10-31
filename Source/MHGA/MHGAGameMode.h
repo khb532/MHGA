@@ -17,6 +17,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 	UPROPERTY(EditAnywhere)
 	TArray<TSubclassOf<APawn>> characterList;

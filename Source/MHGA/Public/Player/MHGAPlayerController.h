@@ -61,4 +61,11 @@ public:
 
 	// GameOver
 	void Client_HandleGameOver();
+
+	// Loading Screen
+	UFUNCTION(Client, Reliable)
+	void ClientShowLoading();
+
+	UFUNCTION(Client, Reliable)
+	void ClientHideLoading();
 };

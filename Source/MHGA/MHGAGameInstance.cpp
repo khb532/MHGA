@@ -3,12 +3,14 @@
 #include <string>
 
 #include "MHGA.h"
+#include "LoadingWidget.h"
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSessionSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "Online/OnlineSessionNames.h"
+#include "Blueprint/UserWidget.h"
 
 UMHGAGameInstance::UMHGAGameInstance()
 {
@@ -24,7 +26,10 @@ UMHGAGameInstance::UMHGAGameInstance()
 	ConstructorHelpers::FObjectFinder<USkeletalMesh> m4(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/Character/Player/P4.P4'"));
 	if (m4.Succeeded())
 		SkeletalMeshes.Add(m4.Object);
-		
+
+	ConstructorHelpers::FClassFinder<UUserWidget> tmp_loadui (TEXT("/Game/UI/WBP_LoadingUI.WBP_LoadingUI_C"));
+	if (tmp_loadui.Succeeded())
+		LoadingWidgetClass = tmp_loadui.Class;
 }
 
 void UMHGAGameInstance::Init()
@@ -322,4 +327,50 @@ int32 UMHGAGameInstance::GetSelectCharacter(FString userName)
 	if (value == nullptr) return -1;
 
 	return *value;
+}
+
+void UMHGAGameInstance::ShowLoadingScreen()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	APlayerController* PC = World->GetFirstPlayerController();
+	if (!PC) return;
+
+	// Loading Widget 생성
+	if (!LoadingWidget && LoadingWidgetClass)
+	{
+		LoadingWidget = CreateWidget<ULoadingWidget>(PC, LoadingWidgetClass);
+	}
+
+	// Widget 표시
+	if (LoadingWidget)
+	{
+		LoadingWidget->AddToViewport(9999); // 최상위 Z-Order
+
+		// 입력 모드 설정
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(LoadingWidget->TakeWidget());
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = false;
+	}
+}
+
+void UMHGAGameInstance::HideLoadingScreen()
+{
+	// Loading Widget 제거
+	if (LoadingWidget && LoadingWidget->IsInViewport())
+	{
+		LoadingWidget->RemoveFromParent();
+	}
+
+	// 입력 모드 복구
+	if (UWorld* World = GetWorld())
+	{
+		if (APlayerController* PC = World->GetFirstPlayerController())
+		{
+			PC->SetInputMode(FInputModeGameOnly());
+			PC->bShowMouseCursor = false;
+		}
+	}
 }
