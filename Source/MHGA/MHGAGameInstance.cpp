@@ -352,10 +352,10 @@ void UMHGAGameInstance::ShowLoadingScreen()
 		LoadingWidget->AddToViewport(9999); // 최상위 Z-Order
 
 		// 입력 모드 설정
-		FInputModeUIOnly InputMode;
-		InputMode.SetWidgetToFocus(LoadingWidget->TakeWidget());
-		PC->SetInputMode(InputMode);
-		PC->bShowMouseCursor = false;
+		// FInputModeUIOnly InputMode;
+		// InputMode.SetWidgetToFocus(LoadingWidget->TakeWidget());
+		// PC->SetInputMode(InputMode);
+		// PC->bShowMouseCursor = false;
 	}
 }
 
