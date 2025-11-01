@@ -1,8 +1,10 @@
 #include "WrappingPaper.h"
 #include "Hamburger.h"
 #include "MHGA.h"
+#include "MHGAGameInstance.h"
 #include "Components/BoxComponent.h"
 #include "Ingredient/IngredientBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -22,6 +24,10 @@ AWrappingPaper::AWrappingPaper()
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
+
+	ConstructorHelpers::FObjectFinder<USoundBase> sound(TEXT("/Script/Engine.SoundWave'/Game/Asset/Sound/paper/WrapSound.WrapSound'"));
+	if (sound.Succeeded())
+		WrapperSound = sound.Object;
 }
 
 void AWrappingPaper::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -209,6 +215,7 @@ void AWrappingPaper::OnRep_AddIng()
 	
 }
 
+
 TMap<EIngredient, int32> AWrappingPaper::MakeMapFromArray(const TArray<FIngredientStack>& InArray)
 {
 	TMap<EIngredient, int32> Result;
@@ -341,5 +348,12 @@ void AWrappingPaper::DestroyIngredients()
 		}
 	}
 	// WrappingPaper 자신도 Destroy하여 포장 과정을 마무리한다.
+	MulticastRPC_WrapSound();
 	Destroy();
+}
+
+void AWrappingPaper::MulticastRPC_WrapSound_Implementation()
+{
+	UGameplayStatics::PlaySoundAtLocation(this, WrapperSound, GetActorLocation(), 1, 1, 0,
+		GetGameInstance<UMHGAGameInstance>()->SoundAttenuation);
 }

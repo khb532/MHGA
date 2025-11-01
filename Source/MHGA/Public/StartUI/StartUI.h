@@ -22,10 +22,14 @@ public:
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	
 protected:
 	UPROPERTY()
 	UMHGAGameInstance* GI;
+	UPROPERTY()
+	USoundBase* ClickSound;
+	
 	UPROPERTY()
 	TSubclassOf<UJobButtonUI> JobBtn;
 

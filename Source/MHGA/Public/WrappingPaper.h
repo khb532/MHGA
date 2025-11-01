@@ -56,6 +56,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_AddIng();
+
 	
 /* Field */
 public:
@@ -87,5 +88,10 @@ private:
 	UPROPERTY()		// 완료 시 제거할 액터 추적
 	TArray<TWeakObjectPtr<AActor>> OverlappingActors;
 
+
 	
+	UPROPERTY(EditAnywhere)
+	USoundBase* WrapperSound;
+	UFUNCTION(Netmulticast, Reliable)
+	void MulticastRPC_WrapSound();
 };

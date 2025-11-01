@@ -14,6 +14,10 @@ public:
 	AWrapperBox();
 
 	void SpawnWrapper();
+
+	UFUNCTION(Netmulticast, Reliable)
+	void MulticastRPC_WrapSound();
+
 /* Field */
 public:
 	UPROPERTY(VisibleAnywhere)
@@ -24,4 +28,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USceneComponent> WrapperPoint;
+
+	UPROPERTY(EditAnywhere)
+	USoundBase* WrapperSound;
 };

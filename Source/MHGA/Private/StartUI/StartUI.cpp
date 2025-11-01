@@ -10,6 +10,7 @@
 #include "Components/EditableText.h"
 #include "Components/EditableTextBox.h"
 #include "Components/UniformGridPanel.h"
+#include "Kismet/GameplayStatics.h"
 #include "StartUI/JobButtonUI.h"
 
 UStartUI::UStartUI(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -17,6 +18,10 @@ UStartUI::UStartUI(const FObjectInitializer& ObjectInitializer) : Super(ObjectIn
 	ConstructorHelpers::FClassFinder<UJobButtonUI> job(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/UI/Start/WBP_JobBtn.WBP_JobBtn_C'"));
 	if (job.Succeeded())
 		JobBtn = job.Class;
+
+	ConstructorHelpers::FObjectFinder<USoundBase> sound(TEXT("/Script/Engine.SoundWave'/Game/Asset/Sound/click.click'"));
+	if (sound.Succeeded())
+		ClickSound = sound.Object;
 }
 
 void UStartUI::NativeConstruct()
@@ -38,6 +43,16 @@ void UStartUI::NativeConstruct()
 	Canvas_Start->SetVisibility(ESlateVisibility::Hidden);
 	Canvas_Session->SetVisibility(ESlateVisibility::Hidden);
 	Canvas_MakeJob->SetVisibility(ESlateVisibility::Hidden);
+}
+
+FReply UStartUI::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	{
+		UGameplayStatics::PlaySound2D(this, ClickSound);
+	}
+
+	return FReply::Unhandled();
 }
 
 void UStartUI::OnClickLoginBtn()
