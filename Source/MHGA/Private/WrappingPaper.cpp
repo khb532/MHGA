@@ -307,7 +307,7 @@ void AWrappingPaper::CompleteWrapping()
 	// SpawnedBurger->SetMenu()
 	
 	SpawnedBurger->SetName(Str);	//	string으로 log보려다가 생각꼬여서 eburgermenu 말고 str씀 ㅈㅅㅈㅅ
-	SpawnedBurger->SetMat(Str);
+	SpawnedBurger->MultiRPC_SetMat(Str);
 	// DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
 }
 

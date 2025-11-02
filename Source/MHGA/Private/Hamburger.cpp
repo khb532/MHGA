@@ -77,7 +77,12 @@ void AHamburger::SetName(FString Name)
 		ServerSetName(Name);
 }
 
-void AHamburger::SetMat(FString Name)
+void AHamburger::MultiRPC_SetMat_Implementation(const FString& Name)
+{
+	SetMat(Name);
+}
+
+void AHamburger::SetMat(const FString& Name)
 {
 	if (Name == "WrongBurger")
 	{

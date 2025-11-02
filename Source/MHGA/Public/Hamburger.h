@@ -25,7 +25,12 @@ public:
 	void ServerSetName(const FString& Name);
 	
 	void SetName(FString Name);
-	void SetMat(FString Name);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MultiRPC_SetMat(const FString& Name);
+
+	void SetMat(const FString& Name);
+	
 	// 버거 외형 텍스처
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> frontMaterial;
