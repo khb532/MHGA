@@ -1,4 +1,6 @@
 #include "Hamburger.h"
+
+#include "BurgerData.h"
 #include "Net/UnrealNetwork.h"
 
 AHamburger::AHamburger()
@@ -21,6 +23,14 @@ AHamburger::AHamburger()
 void AHamburger::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TObjectPtr<UStaticMeshComponent> pMesh = GetMeshComp();
+	if (pMesh)
+	{
+		frontMaterial = UMaterialInstanceDynamic::Create(pMesh->GetMaterial(0), this);
+		pMesh->SetMaterial(0, frontMaterial);
+		
+	}
 
 }
 
@@ -65,6 +75,22 @@ void AHamburger::SetName(FString Name)
 		BurgerName = Name;
 	else
 		ServerSetName(Name);
+}
+
+void AHamburger::SetMat(FString Name)
+{
+	if (Name == "WrongBurger")
+	{
+		frontMaterial->SetTextureParameterValue(TEXT("BurgerName"), wrongTexture);
+	}
+	else if (Name == "Shrimp")
+	{
+		frontMaterial->SetTextureParameterValue(TEXT("BurgerName"), shrimpTexture);
+	}
+	else if (Name == "BigMac")
+	{
+		frontMaterial->SetTextureParameterValue(TEXT("BurgerName"), bigMacTexture);
+	}
 }
 
 FString AHamburger::GetBurgerName()

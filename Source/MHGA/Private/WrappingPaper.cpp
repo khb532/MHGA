@@ -329,6 +329,7 @@ void AWrappingPaper::CompleteWrapping()
 	AHamburger* SpawnedBurger = GetWorld()->SpawnActor<AHamburger>(BurgerClass, this->GetActorTransform());
 	// SpawnedBurger->SetMenu()
 	SpawnedBurger->SetName(Str);
+	SpawnedBurger->SetMat(Str);
 	// DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
 }
 

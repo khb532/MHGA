@@ -25,6 +25,17 @@ public:
 	void ServerSetName(const FString& Name);
 	
 	void SetName(FString Name);
+	void SetMat(FString Name);
+	// 버거 외형 텍스처
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> frontMaterial;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UTexture2D> wrongTexture;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UTexture2D> shrimpTexture;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UTexture2D> bigMacTexture;
 
 	FString GetBurgerName();
 
