@@ -114,7 +114,7 @@ public:
 	float maxWaitTime;
 	float waitingTimer = 0.f;
 	// 성격별 음식 대기 시간
-	UPROPERTY(VisibleInstanceOnly, Category = "AI Order")
+	UPROPERTY(EditAnywhere, Category = "AI Order")
 	TMap<ECustomerPersonality, float> waitingTimeMap;
 
 	

@@ -344,7 +344,7 @@ void UCustomerFSM::StartOrder()
 		UE_LOG(LogTemp, Warning, TEXT("주문 메뉴 결정: %s"), *EnumAsString);
 	}
 	
-	orderCount = FMath::RandRange(1, 3);
+	orderCount = FMath::RandRange(1, 2);
 	curDialogue = GetOrderedMenuAsText();
 	UE_LOG(LogTemp, Error, TEXT("현재 대사 : %s, 현재 수량 : %d"), *curDialogue.ToString(), orderCount);
 }

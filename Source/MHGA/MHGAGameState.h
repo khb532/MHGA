@@ -44,7 +44,7 @@ public:
 
 	// 초기 평점
 	UPROPERTY()
-	int32 startScore = 50;
+	int32 startScore = 0;
 
 	// 게임 오버가 되는 평점
 	UPROPERTY()
@@ -58,7 +58,7 @@ public:
 	void OnRep_UpdateTime();
 
 	UPROPERTY()
-	float startTime = 10.0f;	// 초기 시간
+	float startTime = 300.0f;	// 초기 시간
 
 	// 게임 진행 상태
 	UPROPERTY(ReplicatedUsing = OnRep_GameStart)
