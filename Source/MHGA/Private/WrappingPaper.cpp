@@ -12,8 +12,6 @@ AWrappingPaper::AWrappingPaper()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// TODO(human): 이 액터가 네트워크를 통해 복제되도록 설정
-	// 고려사항: 모든 클라이언트가 이 액터를 보고 상호작용해야 함
 	bReplicates = true;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -65,8 +63,6 @@ void AWrappingPaper::Tick(float DeltaTime)
 
 void AWrappingPaper::AddIngredient_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	// TODO(human): 이 함수가 서버에서만 실행되도록 보장
-	// 고려사항: 클라이언트에서 실행되면 재료가 중복 추가될 수 있음
 	if (!HasAuthority()) return;
 	
 	// On Overlap
@@ -117,8 +113,6 @@ void AWrappingPaper::AddIngredient_Implementation(UPrimitiveComponent* Overlappe
 
 void AWrappingPaper::RemoveIngredient_Implementation(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	// TODO(human): 이 함수도 서버에서만 실행되도록 보장
-	// 고려사항: AddIngredient와 동일한 패턴 적용
 	if (!HasAuthority()) return;
 
 	// OFF Overlap
@@ -180,8 +174,6 @@ void AWrappingPaper::RemoveIngredient_Implementation(UPrimitiveComponent* Overla
 
 void AWrappingPaper::TryWrap_Implementation()
 {
-	// TODO(human): TryWrap을 서버 RPC로 변경
-	// 고려사항: 클라이언트가 포장 버튼을 누르면 서버에 요청, 서버가 실제 포장 처리
 	if (HasAuthority())
 	{
 		if (HasBreadPair() && HasExtraIngredient())
@@ -212,7 +204,7 @@ void AWrappingPaper::PrintLog()
 
 void AWrappingPaper::OnRep_AddIng()
 {
-	
+	//	Empty Func
 }
 
 
@@ -280,16 +272,7 @@ bool AWrappingPaper::HasBreadPair() const
 			Q_BBread += tmp.Quantity;
 		}
 	}
-	
 	// 두 빵의 수량이 모두 1 이상이면 true를 반환하고, 그렇지 않으면 false를 반환한다.
-	if (Q_TBread >= 1 && Q_BBread >= 1)
-	{
-		PRINTLOG(TEXT("Bread is TRUE"))
-	}
-	else
-	{
-		PRINTLOG(TEXT("Bread is FALSE"))
-	}
 	return Q_TBread >= 1 && Q_BBread >= 1;
 }
 
@@ -309,13 +292,8 @@ bool AWrappingPaper::HasExtraIngredient() const
 
 void AWrappingPaper::CompleteWrapping()
 {
-	// TODO(human): 이 함수가 서버에서만 실행되도록 보장
-	// 고려사항: 햄버거 스폰은 서버만 수행, 클라이언트는 자동으로 복제된 햄버거를 봄
 	if (!HasAuthority()) return;
-	PRINTLOG(TEXT("CompleteWrap Not Problem"))
-	// BurgerDataTable과 CompletedBurgerClass가 설정되어 있는지 확인한다.
 	if (!(BurgerDataTable && BurgerClass)) return;
-	// FindMatchingRecipe를 호출해 현재 재료 조합에 대응되는 EBurgerMenu를 얻는다.
 	EBurgerMenu CreatedBurgerName = FindMatchingRecipe(BurgerDataTable, OnAreaIngredients);
 	const UEnum* BurgerEnum = StaticEnum<EBurgerMenu>();
 	FString Str = BurgerEnum->GetNameStringByValue(static_cast<int64>(CreatedBurgerName));
@@ -325,18 +303,15 @@ void AWrappingPaper::CompleteWrapping()
 	
 	DestroyIngredients();
 	
-	// CompletedBurgerClass를 SpawnActor하여 햄버거 액터를 생성한다.
 	AHamburger* SpawnedBurger = GetWorld()->SpawnActor<AHamburger>(BurgerClass, this->GetActorTransform());
 	// SpawnedBurger->SetMenu()
-	SpawnedBurger->SetName(Str);
-	// DestroyIngredients()를 호출해 재료와 포장지를 정리한다.
+	
+	SpawnedBurger->SetName(Str);	//	string으로 log보려다가 생각꼬여서 eburgermenu 말고 str씀 ㅈㅅㅈㅅ
 }
 
 void AWrappingPaper::DestroyIngredients()
 {
-	// OverlappingActors에 저장된 액터 포인터를 순회하며 Destroy를 호출한다.
 	TArray<TWeakObjectPtr<AActor>> ActorsToDestroy = OverlappingActors;
-	// OnAreaIngredients와 OverlappingActors를 비워 다음 사용에 대비한다.
 	OverlappingActors.Empty();
 	OnAreaIngredients.Empty();
 
@@ -347,7 +322,6 @@ void AWrappingPaper::DestroyIngredients()
 			Actor->Destroy();
 		}
 	}
-	// WrappingPaper 자신도 Destroy하여 포장 과정을 마무리한다.
 	MulticastRPC_WrapSound();
 	Destroy();
 }

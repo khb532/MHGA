@@ -34,21 +34,17 @@ public:
 	virtual UStaticMeshComponent* GetMeshComp() override {return Mesh;}
 
 	virtual void StartCook(){};
+	
 	virtual void ShutdownCook(){};
 
-	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
-private:
-
 	
 /* Field */
 public:
-		
-protected:
 	UPROPERTY(EditAnywhere, Category = "Ingredients")
 	UStaticMeshComponent* Mesh;
 
