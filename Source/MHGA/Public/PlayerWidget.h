@@ -25,4 +25,16 @@ public:
 	class UTextBlock* foodScoreBox;
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* startText;
+	UPROPERTY(meta = (BindWidget))
+	class UCanvasPanel* startCanvas;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation* StartAnim;
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation* FinalScoreAnim;
+
+	UFUNCTION()
+	void PlayStartAnim();
+	UFUNCTION()
+	void PlayFinalScoreAnim();
 };

@@ -64,11 +64,12 @@ void AMHGAGameState::OnRep_GameStart()
 {
 	if (bIsGamePlaying)
 	{
-		playerWidget->startText->SetVisibility(ESlateVisibility::Visible);
+		playerWidget->startCanvas->SetVisibility(ESlateVisibility::Visible);
+		playerWidget->PlayStartAnim();
 		FTimerHandle TimerHandle;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
 		{
-			playerWidget->startText->SetVisibility(ESlateVisibility::Hidden);
+			playerWidget->startCanvas->SetVisibility(ESlateVisibility::Hidden);
 		}, 3, false);
 	}
 }
@@ -102,6 +103,7 @@ void AMHGAGameState::OnRep_GameOver()
 		UE_LOG(LogTemp, Warning, TEXT("클라이언트: OnRep_GameOver 수신. 게임 오버 처리 시작."));
 
 		playerWidget->finalScore->SetVisibility(ESlateVisibility::Visible);
+		playerWidget->PlayFinalScoreAnim();
 		
 		// 이 클라이언트의 로컬 플레이어 컨트롤러를 가져옵니다.
 		AMHGAPlayerController* pc = Cast<AMHGAPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
