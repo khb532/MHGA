@@ -1,6 +1,7 @@
 #include "Ingredient/Portions.h"
 
 #include "MHGA.h"
+#include "MHGAGameInstance.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -111,7 +112,8 @@ void APortions::MulticastRPC_PlayFrySfx_Implementation()
 		if (m_sfx_FrySoundComp && m_sfx_FrySoundComp->IsPlaying())
 			m_sfx_FrySoundComp->Stop();
 		
-		m_sfx_FrySoundComp = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), m_sfx_FrySound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3);
+		m_sfx_FrySoundComp = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), m_sfx_FrySound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3,
+			1, 0, GetGameInstance<UMHGAGameInstance>()->SoundAttenuation);
 		
 	}
 }

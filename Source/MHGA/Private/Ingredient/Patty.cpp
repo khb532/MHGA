@@ -1,6 +1,7 @@
 #include "Ingredient/Patty.h"
 
 #include "GeometryTypes.h"
+#include "MHGAGameInstance.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -154,7 +155,8 @@ void APatty::MulticastRPC_PlayGrillSfx_Implementation()
 		if (m_sfx_GrillSoundComp && m_sfx_GrillSoundComp->IsPlaying())
 			m_sfx_GrillSoundComp->Stop();
 		
-		m_sfx_GrillSoundComp = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), m_sfx_GrillSound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3);
+		m_sfx_GrillSoundComp = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), m_sfx_GrillSound, this->GetActorLocation(), FRotator::ZeroRotator, 0.3,
+			1, 0, GetGameInstance<UMHGAGameInstance>()->SoundAttenuation);
 		
 	}
 }
